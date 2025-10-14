@@ -12,22 +12,22 @@
           "informationUri": "https://www.glog.ai",
           "rules": [
             {
-              "id": "glog-dc995160-db9f-4ef2-9c18-33a769a9ac2c",
+              "id": "db6f18f0-1f8e-3729-b501-7c0ac7f84e58",
               "help": {
                 "text": "",
-                "markdown": "### Description\n\nIn C++ programming, using weak or non-cryptographic random number generators, such as the `rand()` function, can lead to vulnerabilities, especially in security-sensitive applications. The `rand()` function is not suitable for cryptographic purposes because it generates predictable sequences of numbers if the seed is known. This predictability can be exploited by attackers to compromise the security of the application.\n\n### General Mitigation Advice\n\nTo mitigate this vulnerability, use a cryptographically secure random number generator. In C++, the `<random>` library provides better alternatives, such as `std::random_device` and `std::mt19937`, which can be used to generate random numbers more securely.\n\n### Source Code Fix Recommendation\n\nReplace the use of `rand()` with a more secure random number generator from the `<random>` library. Here is an example of how to do this:\n\n```cpp\n#include <iostream>\n#include <random>\n\nint main() {\n    // Create a random device and a Mersenne Twister random number generator\n    std::random_device rd;\n    std::mt19937 gen(rd());\n\n    // Define a distribution range\n    std::uniform_int_distribution<> dis(1, 100);\n\n    // Generate a random number\n    int random_number = dis(gen);\n\n    std::cout << \"Secure random number: \" << random_number << std::endl;\n\n    return 0;\n}\n```\n\n### Library Dependencies\n\nTo execute the above code example properly, the following library is required:\n\n- `<random>`: This library provides facilities for generating random numbers.\n\n### OWASP Resources\n\n- [OWASP Cryptographic Storage Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html)\n\n### Common Weakness Enumeration (CWE)\n\n- [CWE-338: Use of Cryptographically Weak Pseudo-Random Number Generator (PRNG)](https://cwe.mitre.org/data/definitions/338.html)"
+                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability in C++ refers to the use of insecure C library functions that can lead to various security issues such as buffer overflows, format string vulnerabilities, integer overflows, etc. In the provided code snippet, the function `getenv()` is used, which can lead to security vulnerabilities. The `getenv()` function returns a pointer to a string that is associated with the matched environment variable name. This can lead to information disclosure or other security issues if the environment variable contains sensitive information.\n\n## Mitigation Advice\n\nAvoid using insecure C library functions. Instead, use safer alternatives provided by the C++ Standard Library. In this case, consider using a method that does not expose potential sensitive information through environment variables. \n\n## Source Code Fix Recommendation\n\n```cpp\n#include <cstdlib>\n#include <string>\n\nstd::string log_env;\nchar* p = std::getenv(\"HIPSPARSELT_LOG_LEVEL\");\nif(p!=NULL)\n{\n    log_env.assign(p);\n}\n```\n\nIn this code, we are still using `getenv()`, but we are storing the result in a `std::string` instead of a `char*`. This can help prevent issues with the original pointer being modified, which can lead to undefined behavior.\n\n## Library Dependencies\n\n- cstdlib\n\n## References\n\n- [CWE-676: Use of Potentially Dangerous Function](https://cwe.mitre.org/data/definitions/676.html)\n\nPlease note that the links provided are accessible to anonymous users at the time of writing this report."
               },
               "properties": {
                 "tags": [
-                  "DS148264"
+                  "DS154189"
                 ]
               }
             },
             {
-              "id": "glog-9c76e206-27e6-41cb-a0c0-17712cb0d326",
+              "id": "b0514e80-36ee-3bfe-b672-c78877f9c819",
               "help": {
                 "text": "",
-                "markdown": "## Description\n\nThe `memcpy` function in C++ is used to copy a block of memory from one location to another. This function does not check for the size of the destination buffer, which can lead to buffer overflow if the source is larger than the destination. This is a common vulnerability in C++ programming that can lead to serious security issues such as code execution, denial of service, or information disclosure.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, you should always ensure that the destination buffer is large enough to hold the data being copied. This can be done by checking the size of the source and destination before calling `memcpy`. Additionally, consider using safer functions that include buffer size checks, such as `strncpy` or `memcpy_s` (in C11).\n\n## Source Code Fix Recommendation\n\nReplace the `memcpy` function with a safer alternative that includes a buffer size check. For example, you can use the `memcpy_s` function, which is available in C11:\n\n```cpp\nif(sizeof(m_data) - offset >= sizeof(T)) {\n    memcpy_s(&m_data[offset], sizeof(m_data) - offset, &value, sizeof(T));\n} else {\n    // Handle error\n}\n```\n\n## Library Dependencies\n\nThe `memcpy` function is part of the C standard library, so no additional libraries are needed for this code to execute.\n\n## References\n\n- [OWASP C++ Secure Coding Practices](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [CWE-120: Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')](https://cwe.mitre.org/data/definitions/120.html)\n\nPlease note that the links provided are accessible to anonymous users at the time of writing this report."
+                "markdown": "This finding is considered a genuine vulnerability because the analysis detected a possible overlap between the source and destination memory regions in the memory copy operation. When the source and destination buffers overlap, using functions like memcpy can result in undefined behavior, which may lead to data corruption or unpredictable program behavior. The risk is further supported by dataflow analysis indicating that the destination may be derived from the source. There are no explicit null pointer risks, and the source and destination are not string literals or constant strings, which would otherwise reduce the risk of overlap. No guard or capacity checks are present to mitigate this risk.\n\n## In Context Remediation\nTo prevent undefined behavior when the source and destination memory regions may overlap, replace the use of memcpy with memmove, which is designed to handle overlapping regions safely. For example, change the code to:\n\n```cpp\nmemmove(rev, v, sizeof(v));\n```\n\nThis ensures that the memory is copied correctly even if the source and destination overlap.\n\n## References\n- [OWASP C-Based Toolchain Hardening Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [CWE-119: Improper Restriction of Operations within the Bounds of a Memory Buffer](https://cwe.mitre.org/data/definitions/119.html)\n- [CWE-787: Out-of-bounds Write](https://cwe.mitre.org/data/definitions/787.html)\n- [OWASP Buffer Overflow](https://owasp.org/www-community/vulnerabilities/Buffer_Overflow)\n\n___\n"
               },
               "properties": {
                 "tags": [
@@ -36,46 +36,34 @@
               }
             },
             {
-              "id": "glog-77f6d799-7dc6-44a7-9bef-b24c56ff4d6b",
+              "id": "f8d661df-5cae-3bbb-a30c-d51d50a9b362",
               "help": {
                 "text": "",
-                "markdown": "### Description\n\nIn C++ programming, using weak or non-cryptographic random number generators, such as the `rand()` function, can lead to vulnerabilities, especially when randomness is critical for security purposes. The `rand()` function is not suitable for cryptographic purposes because it produces predictable sequences of numbers if the seed is known or can be guessed. This can lead to vulnerabilities in applications where randomness is used for generating keys, tokens, or any other security-related data.\n\n### General Mitigation Advice\n\nTo mitigate this vulnerability, use a cryptographically secure random number generator (CSPRNG) instead of `rand()`. In C++, the `<random>` library provides better alternatives, such as `std::random_device` and `std::mt19937`, which can be used to generate random numbers with better randomness properties.\n\n### Source Code Fix Recommendation\n\nReplace the use of `rand() %` with a more secure random number generation approach using the `<random>` library. Below is an example of how to replace `rand()` with a CSPRNG:\n\n```cpp\n#include <iostream>\n#include <random>\n\nint main() {\n    // Create a random device and a Mersenne Twister engine\n    std::random_device rd;\n    std::mt19937 gen(rd());\n\n    // Define the range for random numbers\n    std::uniform_int_distribution<> dis(0, 99); // Example range [0, 99]\n\n    // Generate a random number\n    int random_number = dis(gen);\n\n    std::cout << \"Secure random number: \" << random_number << std::endl;\n\n    return 0;\n}\n```\n\n### Library Dependencies\n\nTo execute the above code example, the following library is required:\n\n- `<random>`: This is part of the C++ Standard Library and does not require any additional dependencies beyond a standard C++ compiler that supports C++11 or later.\n\n### Relevant Links\n\n- [OWASP Cryptographic Storage Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html)\n- [CWE-338: Use of Cryptographically Weak Pseudo-Random Number Generator (PRNG)](https://cwe.mitre.org/data/definitions/338.html)"
+                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability in C++ refers to the use of insecure or unsafe C library functions that can lead to various security issues such as buffer overflows, format string vulnerabilities, integer overflows, etc. In this case, the `getenv` function is used, which can lead to security vulnerabilities. The `getenv` function returns a pointer to a string that is associated with the matched environment variable name. This can lead to information disclosure or even code execution if an attacker can control the environment in which your program runs.\n\n## Mitigation Advice\n\nAvoid using `getenv` function as it can lead to security vulnerabilities. Instead, use secure alternatives that are provided by the platform or language. If you must use `getenv`, ensure that the environment in which your program runs is secure and cannot be controlled by an attacker.\n\n## Source Code Fix Recommendation\n\nInstead of using `getenv`, consider using a secure alternative. For example, you can use the `std::getenv` function in C++ which is safer. Here is how you can modify the code:\n\n```cpp\n#include <cstdlib>\n\nconst char* log_env = std::getenv(\"HIPSPARSELT_LOG_MASK\");\nif (log_env != nullptr) {\n    // ...\n}\n```\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- `cstdlib`: This is a standard C++ library that provides functions for performing general functions.\n\n## OWASP and CWE Links\n\n- [OWASP C++](https://owasp.org/www-pdf-archive/OWASP_SCP_v2.pdf)\n- [CWE-676: Use of Potentially Dangerous Function](https://cwe.mitre.org/data/definitions/676.html)\n\nPlease note that these links are active and accessible for anonymous users at the time of writing this report."
               },
               "properties": {
                 "tags": [
-                  "DS148264"
+                  "DS154189"
                 ]
               }
             },
             {
-              "id": "glog-b4d90ae4-f58c-440f-99e6-bd9464ccfa20",
+              "id": "0ceb119d-3ff3-3816-aa39-9e87965bd47d",
               "help": {
                 "text": "",
-                "markdown": "### Description\n\nIn C++ programming, using weak or non-cryptographic random number generators, such as the `rand()` function, can lead to vulnerabilities, especially when randomness is critical for security purposes. The `rand()` function is not suitable for cryptographic purposes because it produces predictable sequences of numbers if the seed is known or can be guessed. This can lead to vulnerabilities in applications where randomness is used for generating keys, tokens, or any other security-related data.\n\n### General Mitigation Advice\n\nTo mitigate this vulnerability, use a cryptographically secure random number generator (CSPRNG) instead of `rand()`. In C++, the `<random>` library provides better alternatives, such as `std::random_device` and `std::mt19937`, which can be used to generate random numbers with better randomness properties.\n\n### Source Code Fix Recommendation\n\nReplace the use of `rand() %` with a more secure random number generation approach using the `<random>` library. Below is an example of how to replace `rand()` with a CSPRNG:\n\n```cpp\n#include <iostream>\n#include <random>\n\nint main() {\n    // Create a random device and a Mersenne Twister engine\n    std::random_device rd;\n    std::mt19937 gen(rd());\n\n    // Define the range for random numbers\n    std::uniform_int_distribution<> dis(0, 99); // Example range [0, 99]\n\n    // Generate a random number\n    int random_number = dis(gen);\n\n    std::cout << \"Secure random number: \" << random_number << std::endl;\n\n    return 0;\n}\n```\n\n### Library Dependencies\n\nTo execute the above code example, the following library is required:\n\n- `<random>`: This is part of the C++ Standard Library and does not require any additional dependencies beyond a standard C++ compiler that supports C++11 or later.\n\n### Relevant Links\n\n- [OWASP Cryptographic Storage Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html)\n- [CWE-338: Use of Cryptographically Weak Pseudo-Random Number Generator (PRNG)](https://cwe.mitre.org/data/definitions/338.html)"
+                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability in C++ refers to the use of insecure or unsafe C library functions that can lead to various security issues such as buffer overflows, format string vulnerabilities, or integer overflows. In this case, the `getenv` function is used, which can lead to security vulnerabilities. The `getenv` function returns a pointer to a string that is associated with the matched environment variable name. This string can be overwritten by subsequent calls to `getenv`, which can lead to race conditions if the application is multithreaded.\n\n## Mitigation Advice\n\nAvoid using the `getenv` function in multithreaded applications. If you need to use environment variables, consider using a method that is thread-safe. Also, validate and sanitize all inputs and outputs. \n\n## Source Code Fix Recommendation\n\nInstead of using `getenv`, consider using a thread-safe function such as `getenv_s`. Here is an example of how you can modify the code:\n\n```cpp\nchar* log_env;\nsize_t requiredSize;\n\ngetenv_s(&requiredSize, NULL, 0, \"HIPSPARSELT_LOG_FILE\");\nif (requiredSize == 0)\n{\n    printf(\"HIPSPARSELT_LOG_FILE doesn't exist!\\n\");\n    exit(1);\n}\n\nlog_env = (char*)malloc(requiredSize * sizeof(char));\nif (!log_env)\n{\n    printf(\"Failed to allocate memory!\\n\");\n    exit(1);\n}\n\ngetenv_s(&requiredSize, log_env, requiredSize, \"HIPSPARSELT_LOG_FILE\");\n```\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- `cstdlib` (for `getenv` and `malloc` functions)\n- `cstdio` (for `printf` function)\n\n## References\n\n- [OWASP C++ Secure Coding Practices](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [CWE-676: Use of Potentially Dangerous Function](https://cwe.mitre.org/data/definitions/676.html)"
               },
               "properties": {
                 "tags": [
-                  "DS148264"
+                  "DS154189"
                 ]
               }
             },
             {
-              "id": "glog-62e951b1-3e3b-4a97-b258-86ff219e22e9",
+              "id": "0ec7a2b5-d923-3c0d-a2ad-f8b4a86e9344",
               "help": {
                 "text": "",
-                "markdown": "### Description\n\nIn C++ programming, using weak or non-cryptographic random number generators, such as the `rand()` function, can lead to vulnerabilities, especially in security-sensitive applications. The `rand()` function is not suitable for cryptographic purposes because it generates predictable sequences of numbers if the seed is known. This predictability can be exploited by attackers to compromise the security of the application.\n\n### General Mitigation Advice\n\nTo mitigate this vulnerability, use a cryptographically secure random number generator. In C++, the `<random>` library provides better alternatives, such as `std::random_device` and `std::mt19937`, which can be used to generate random numbers more securely.\n\n### Source Code Fix Recommendation\n\nReplace the use of `rand()` with a more secure random number generator from the `<random>` library. Here is an example of how to do this:\n\n```cpp\n#include <iostream>\n#include <random>\n\nint main() {\n    // Create a random device and a Mersenne Twister random number generator\n    std::random_device rd;\n    std::mt19937 gen(rd());\n\n    // Define a distribution range\n    std::uniform_int_distribution<> dis(1, 100);\n\n    // Generate a random number\n    int random_number = dis(gen);\n\n    std::cout << \"Secure random number: \" << random_number << std::endl;\n\n    return 0;\n}\n```\n\n### Library Dependencies\n\nTo execute the above code example properly, the following library is required:\n\n- `<random>`: This library provides facilities for generating random numbers.\n\n### OWASP Resources\n\n- [OWASP Cryptographic Storage Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html)\n\n### Common Weakness Enumeration (CWE)\n\n- [CWE-338: Use of Cryptographically Weak Pseudo-Random Number Generator (PRNG)](https://cwe.mitre.org/data/definitions/338.html)"
-              },
-              "properties": {
-                "tags": [
-                  "DS148264"
-                ]
-              }
-            },
-            {
-              "id": "glog-67582a5f-3144-4607-9845-86d92efb0510",
-              "help": {
-                "text": "",
-                "markdown": "## Description\n\nIn C++ programming, using system time or a static value for randomness seeding can lead to predictable randomness, which is a security vulnerability. This is because if an attacker can predict the seed value, they can predict the sequence of random numbers generated by the program, which can lead to various types of attacks, such as brute force attacks.\n\nIn the provided code snippet, `srand(1)`, a static value of 1 is used to seed the random number generator. This means that every time the program is run, the same sequence of random numbers will be generated, making it easy for an attacker to predict.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, use a truly random value to seed the random number generator. This could be a value that changes each time the program is run, such as the current time, or a value that is unpredictable, such as a random number generated by a hardware random number generator.\n\n## Code Fix Recommendation\n\nHere is a code fix that uses the current time to seed the random number generator:\n\n```cpp\n#include <ctime>\n#include <cstdlib>\n\nsrand(time(0));\n```\n\nThis code will generate a different sequence of random numbers each time the program is run, as long as the program is not run more than once per second. For more secure randomness, consider using a hardware random number generator or a cryptographic random number generator.\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- ctime\n- cstdlib\n\n## References\n\n- [CWE-330: Use of Insufficiently Random Values](https://cwe.mitre.org/data/definitions/330.html)"
+                "markdown": "## Description\n\nIn C++ programming, using system time or a static value for seeding randomness can lead to predictable results, which is a security vulnerability. This is because the seed value determines the sequence of random numbers that will be generated. If an attacker can predict or know the seed value, they can predict the sequence of random numbers, which can lead to various security issues, such as predictable session identifiers, predictable cryptographic keys, etc.\n\nIn the provided code example, `srand(1)` is used to seed the random number generator with a static value of 1. This means that every time the program is run, the same sequence of random numbers will be generated, which is predictable and hence insecure.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, use a truly random value to seed the random number generator. This can be achieved by using a high-quality source of randomness provided by the operating system, such as `/dev/urandom` on Unix-like systems or `CryptGenRandom` on Windows.\n\n## Source Code Fix Recommendation\n\nHere is a recommended fix for the provided code example:\n\n```cpp\n#include <random>\n\nstd::random_device rd;\nstd::mt19937 gen(rd());\n```\n\nIn this code, `std::random_device` is used to generate a non-deterministic random number, which is then used to seed the Mersenne Twister random number generator (`std::mt19937`).\n\n## Library Dependencies\n\nThe code example requires the `<random>` library.\n\n## References\n\n- [CWE-330: Use of Insufficiently Random Values](https://cwe.mitre.org/data/definitions/330.html)"
               },
               "properties": {
                 "tags": [
@@ -84,10 +72,84 @@
               }
             },
             {
-              "id": "glog-b7947490-6bce-4fee-be3d-6ca5e320605d",
+              "id": "345e9db6-bb27-3992-929a-4904344aa34f",
               "help": {
                 "text": "",
-                "markdown": "## Description\n\nThe `memcpy` function in C++ is used to copy a block of memory from one location to another. This function is vulnerable to buffer overflow attacks if the size of the data being copied is larger than the size of the destination buffer. In the provided code snippet, `memcpy(ptr, rptr, sizeof(float))`, there is a potential risk if the size of `rptr` is larger than the size of `ptr`.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, you should always ensure that the destination buffer is large enough to hold the data being copied. This can be done by checking the size of the source data before calling `memcpy`. Also, consider using safer functions such as `strncpy` or `memcpy_s` which include a length parameter to avoid buffer overflow.\n\n## Source Code Fix Recommendation\n\nHere is a safer version of the code:\n\n```cpp\n#include <cstring>\n\nif (sizeof(ptr) >= sizeof(float)) {\n    memcpy(ptr, rptr, sizeof(float));\n} else {\n    // Handle error\n}\n```\n\n## Library Dependencies\n\nThe `memcpy` function is part of the C Standard Library, so you need to include the `<cstring>` header file.\n\n## References\n\n- [OWASP Buffer Overflow](https://owasp.org/www-community/vulnerabilities/Buffer_Overflow)\n- [CWE-120: Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')](https://cwe.mitre.org/data/definitions/120.html)"
+                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability in C++ refers to the use of insecure C library functions that can lead to various security issues such as buffer overflows, format string vulnerabilities, integer overflows, etc. In this case, the `getenv` function is used, which can lead to information disclosure or denial of service if the environment variable does not exist.\n\nThe `getenv` function returns a pointer to a string that is associated with the matched environment variable name passed as input. If the specified environment variable is not found, the function returns a null pointer. This can lead to null pointer dereferencing if the return value is not checked properly.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, it is recommended to use safer alternatives to the `getenv` function. If you still need to use `getenv`, always check the return value to ensure it is not null before using it. \n\n## Source Code Fix Recommendation\n\nHere is a safer way to use `getenv`:\n\n```cpp\nconst char* value = getenv(environment_variable_name.c_str());\nif (value == NULL) {\n    // Handle the error, e.g., by returning or throwing an exception\n} else {\n    environment_variable_value = std::string(value);\n}\n```\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- `<cstdlib>`: for `getenv`\n- `<string>`: for `std::string`\n\n## References\n\n- [CWE-628: Function Call with Incorrectly Specified Arguments](https://cwe.mitre.org/data/definitions/628.html)\n\nPlease note that the links are valid and active for anonymous users at the time of writing this report."
+              },
+              "properties": {
+                "tags": [
+                  "DS154189"
+                ]
+              }
+            },
+            {
+              "id": "7547e7b0-36fb-3f70-b8f8-4d75f4e0b05c",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nIn C++ programming, the vulnerability \"Avoid Using Non-Cryptographic or Weak Random Number Generators\" refers to the use of weak or non-cryptographic random number generators that can lead to predictable or easily guessable values. This can be exploited by attackers to predict the outcome of the program, leading to security breaches.\n\nIn the given code snippet `ha[i] = CAST(rand() % 17)`, the `rand()` function is used which is a weak random number generator. It generates pseudo-random numbers that are not suitable for cryptographic operations.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, it is recommended to use strong cryptographic random number generators. In C++, you can use functions like `std::random_device`, `std::mt19937` (Mersenne Twister 19937 generator), or other similar functions provided by the `<random>` library.\n\n## Source Code Fix Recommendation\n\nHere is a fixed version of the code using `std::random_device`:\n\n```cpp\n#include <random>\n\nstd::random_device rd;\nstd::mt19937 gen(rd());\nstd::uniform_int_distribution<> dis(0, 16);\n\nha[i] = CAST(dis(gen));\n```\n\n## Library Dependencies\n\nThe fixed code requires the `<random>` library.\n\n## References\n\n- [CWE-338: Use of Cryptographically Weak PRNG](https://cwe.mitre.org/data/definitions/338.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS148264",
+                  "7547e7b0-36fb-3f70-b8f8-4d75f4e0b05c"
+                ]
+              }
+            },
+            {
+              "id": "c517aec2-2bdd-3fda-bc8c-62160fb59fd5",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nIn C++ programming, the vulnerability \"Avoid Using Non-Cryptographic or Weak Random Number Generators\" refers to the use of weak or non-cryptographic random number generators that can lead to predictable or easily guessable values. This can be exploited by attackers to predict the outcome of the program, leading to security breaches.\n\nIn the given code snippet `ha[i] = CAST(rand() % 17)`, the `rand()` function is used which is a weak random number generator. It generates pseudo-random numbers that are not suitable for cryptographic operations.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, it is recommended to use strong cryptographic random number generators. In C++, you can use functions like `std::random_device`, `std::mt19937` (Mersenne Twister 19937 generator), or other similar functions provided by the `<random>` library.\n\n## Source Code Fix Recommendation\n\nHere is a fixed version of the code using `std::random_device`:\n\n```cpp\n#include <random>\n\nstd::random_device rd;\nstd::mt19937 gen(rd());\nstd::uniform_int_distribution<> dis(0, 16);\n\nha[i] = CAST(dis(gen));\n```\n\n## Library Dependencies\n\nThe fixed code requires the `<random>` library.\n\n## References\n\n- [CWE-338: Use of Cryptographically Weak PRNG](https://cwe.mitre.org/data/definitions/338.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS148264",
+                  "c517aec2-2bdd-3fda-bc8c-62160fb59fd5"
+                ]
+              }
+            },
+            {
+              "id": "79d6c7c8-cf37-3c98-b92f-8b4f1cacdc97",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability refers to the use of insecure C library functions in C++ code. These functions are often prone to buffer overflow attacks, format string vulnerabilities, or integer overflows. In this case, the function `atoi()` is used, which can lead to integer overflow if the input string represents a number larger than `INT_MAX`.\n\n## Mitigation Advice\n\nAvoid using C library functions that do not perform bounds checking or input validation. Instead, use safer alternatives provided by the C++ Standard Library. For instance, instead of `atoi()`, you can use `std::stoi()`, which throws an exception if the input string cannot be converted to an integer or if the converted value is out of the range of representable values by an `int`.\n\n## Source Code Fix Recommendation\n\nReplace the `atoi()` function with `std::stoi()`. Here is the fixed code:\n\n```cpp\n#include <string>\n\n// ...\n\ntry {\n    stride = std::stoi(argv[++i]);\n} catch (const std::invalid_argument& ia) {\n    // Handle the exception\n} catch (const std::out_of_range& oor) {\n    // Handle the exception\n}\n```\n\n## Library Dependencies\n\nThe code example requires the following library:\n\n- `<string>`: This is a standard C++ library for string manipulation.\n\n## References\n\n- [CWE-190: Integer Overflow or Wraparound](https://cwe.mitre.org/data/definitions/190.html)\n\nPlease note that the links provided are accessible to anonymous users at the time of writing this report."
+              },
+              "properties": {
+                "tags": [
+                  "DS154189"
+                ]
+              }
+            },
+            {
+              "id": "22a778c5-6b4e-36d8-8476-357bb1123092",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability refers to the use of insecure C library functions in C++ code. These functions are often prone to buffer overflow attacks, format string vulnerabilities, integer overflow, etc. In this case, the function `atoi()` is used, which can lead to integer overflow if the input string represents a number larger than `INT_MAX`.\n\n## Mitigation Advice\n\nAvoid using C library functions that do not perform bounds checking or input validation. Instead, use safer alternatives provided by the C++ Standard Library. For `atoi()`, a safer alternative is `std::stoi()`, which throws an exception if the input string cannot be converted to an integer or if the converted value is out of the range of representable values by an `int`.\n\n## Source Code Fix Recommendation\n\nReplace the `atoi()` function with `std::stoi()`. Here is the fixed code:\n\n```cpp\ntry {\n    m = std::stoi(argv[++i]);\n} catch (const std::invalid_argument& ia) {\n    std::cerr << \"Invalid argument: \" << ia.what() << '\\n';\n} catch (const std::out_of_range& oor) {\n    std::cerr << \"Out of range: \" << oor.what() << '\\n';\n}\n```\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- `<cstdlib>` for `atoi()`\n- `<string>` for `std::stoi()`\n- `<iostream>` for `std::cerr`\n\n## References\n\n- [CWE-681: Incorrect Conversion between Numeric Types](https://cwe.mitre.org/data/definitions/681.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS154189"
+                ]
+              }
+            },
+            {
+              "id": "5dfa455e-18c2-3e78-94d7-1d73f7a03a8d",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\n\"Prohibited C Function Found\" is a vulnerability that arises when a program uses a function that can potentially lead to a security risk. In this case, the function `atoi()` is used, which is a standard C library function that converts a string into an integer. The problem with `atoi()` is that it does not perform any error checking. If the input string cannot be converted into an integer, it returns zero, which can lead to unexpected behavior.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, it is recommended to use safer alternatives that perform error checking. In C++, the `std::stoi()` function can be used as it throws an exception if the conversion fails. This allows the program to handle the error in a controlled manner.\n\n## Source Code Fix Recommendation\n\nReplace the `atoi()` function with `std::stoi()`. Here is the fixed code:\n\n```cpp\ntry {\n    batch_count = std::stoi(argv[++i]);\n} catch (std::invalid_argument& e) {\n    // handle error\n} catch (std::out_of_range& e) {\n    // handle error\n}\n```\n\n## Library Dependencies\n\nThe code example requires the following library:\n\n- `<string>`: This library is required for the `std::stoi()` function.\n\n## OWASP Resources\n\n- [OWASP C++ Secure Coding Practices](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n\n## Common Weakness Enumeration (CWE)\n\n- [CWE-242: Use of Inherently Dangerous Function](https://cwe.mitre.org/data/definitions/242.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS154189"
+                ]
+              }
+            },
+            {
+              "id": "023d7871-4b68-3f09-8cc6-e00d0225b47c",
+              "help": {
+                "text": "",
+                "markdown": "This finding is considered a genuine vulnerability because the analysis detected a possible overlap between the source and destination memory regions in a memory copy operation. The use of a standard memory copy function (such as memcpy) with potentially overlapping buffers can result in undefined behavior, which may lead to data corruption or unpredictable program behavior. The risk is further supported by dataflow analysis indicating that the destination and source may refer to overlapping memory. There are no explicit null pointer risks, and the source and destination are not string literals or constant strings, which would otherwise reduce the likelihood of overlap. No guard or evidence of safe intent is present. Therefore, this is a high-confidence, actionable issue.\n\n## In Context Remediation\nTo prevent undefined behavior when copying memory regions that may overlap, use `memmove` instead of `memcpy`. `memmove` is specifically designed to handle overlapping source and destination buffers safely. Replace the original call with:\n\n```cpp\nmemmove(rev, v, sizeof(v));\n```\n\nThis change ensures that the copy operation is performed correctly even if the source and destination regions overlap.\n\n## References\n- [OWASP C-Based Toolchain Hardening Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [OWASP Buffer Overflow](https://owasp.org/www-community/vulnerabilities/Buffer_Overflow)\n- [CWE-119: Improper Restriction of Operations within the Bounds of a Memory Buffer](https://cwe.mitre.org/data/definitions/119.html)\n- [CWE-787: Out-of-bounds Write](https://cwe.mitre.org/data/definitions/787.html)\n\n\n___\n"
               },
               "properties": {
                 "tags": [
@@ -96,38 +158,358 @@
               }
             },
             {
-              "id": "glog-dd84a6af-de10-4e93-96cd-fd66d3920798",
+              "id": "74692596-0bc9-39c5-b853-e980464a9459",
               "help": {
                 "text": "",
-                "markdown": "### Description\n\nIn C++ programming, using weak or non-cryptographic random number generators, such as the `rand()` function, can lead to vulnerabilities, especially when randomness is critical for security purposes. The `rand()` function is not suitable for cryptographic purposes because it produces predictable sequences of numbers if the seed is known or can be guessed. This can lead to vulnerabilities in applications where randomness is used for generating keys, tokens, or any other security-related data.\n\n### General Mitigation Advice\n\nTo mitigate this vulnerability, use a cryptographically secure random number generator (CSPRNG) instead of `rand()`. In C++, the `<random>` library provides better alternatives, such as `std::random_device` and `std::mt19937`, which can be used to generate random numbers with better randomness properties.\n\n### Source Code Fix Recommendation\n\nReplace the use of `rand() %` with a more secure random number generation approach using the `<random>` library. Below is an example of how to replace `rand()` with a CSPRNG:\n\n```cpp\n#include <iostream>\n#include <random>\n\nint main() {\n    // Create a random device and a Mersenne Twister engine\n    std::random_device rd;\n    std::mt19937 gen(rd());\n\n    // Define the range for random numbers\n    std::uniform_int_distribution<> dis(0, 99); // Example range [0, 99]\n\n    // Generate a random number\n    int random_number = dis(gen);\n\n    std::cout << \"Secure random number: \" << random_number << std::endl;\n\n    return 0;\n}\n```\n\n### Library Dependencies\n\nTo execute the above code example, the following library is required:\n\n- `<random>`: This is part of the C++ Standard Library and does not require any additional dependencies beyond a standard C++ compiler that supports C++11 or later.\n\n### Relevant Links\n\n- [OWASP Cryptographic Storage Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html)\n- [CWE-338: Use of Cryptographically Weak Pseudo-Random Number Generator (PRNG)](https://cwe.mitre.org/data/definitions/338.html)"
+                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability refers to the use of insecure or unsafe C library functions in C++ code. These functions are often prone to errors such as buffer overflows, integer overflows, or other types of memory corruption, which can lead to serious security vulnerabilities.\n\nIn the provided code snippet, the function `atoi()` is used, which is a prohibited C function. The `atoi()` function converts a string to an integer and it does not perform any error checking. If the input string is not a valid integer, it can lead to undefined behavior.\n\n## Mitigation Advice\n\nAvoid using prohibited C functions. Instead, use safer alternatives that perform error checking. In the case of `atoi()`, a safer alternative is `strtol()`, which allows for error checking.\n\n## Source Code Fix Recommendation\n\nReplace the `atoi()` function with `strtol()`. Here is how you can do it:\n\n```cpp\nchar *end;\nlong int ld = strtol(argv[++i], &end, 10);\nif (end == argv[i] || *end != '\\0' || errno == ERANGE) {\n    // handle the error\n}\n```\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- `stdlib.h` for `strtol()`\n- `errno.h` for `errno`\n\n## References\n\n- [OWASP C++ Secure Coding Practices](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [CWE-242: Use of Inherently Dangerous Function](https://cwe.mitre.org/data/definitions/242.html)\n\nPlease note that the links provided are active and accessible to anonymous users at the time of writing this report."
               },
               "properties": {
                 "tags": [
-                  "DS148264"
+                  "DS154189"
                 ]
               }
             },
             {
-              "id": "glog-b3c682ba-d4ea-4d8d-8cf6-43526c6d3cc9",
+              "id": "a725add5-4894-3b96-b155-ea303315eabc",
               "help": {
                 "text": "",
-                "markdown": "## Description\n\nThe `strcpy` function in C++ is a standard library function that copies a string. However, it is considered unsafe because it does not check the size of the destination buffer, which can lead to buffer overflow vulnerabilities if the source string is larger than the destination buffer. This can lead to arbitrary code execution, denial of service, or information disclosure vulnerabilities.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, use safer string copy functions that check the size of the destination buffer. These include `strncpy`, `strlcpy`, or `memcpy`. However, these functions can also be misused, so it's important to always ensure that the destination buffer is large enough to hold the source string plus a null terminator.\n\n## Source Code Fix Recommendation\n\nReplace the `strcpy` function with a safer function like `strncpy`. Here's how you can do it:\n\n```cpp\nchar name[20];\nstrncpy(name, \"hipsparselt-bench\", sizeof(name));\nname[sizeof(name) - 1] = '\\0'; // Ensure null-termination\n```\n\n## Library Dependencies\n\nThe code example requires the `<cstring>` library in C++ to execute properly.\n\n## References\n\n- [OWASP C++ Secure Coding Practices](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [CWE-120: Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')](https://cwe.mitre.org/data/definitions/120.html)\n\nPlease note that the links provided are accessible to anonymous users at the time of writing this report."
+                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability refers to the use of insecure C library functions in C++ code. These functions are often prone to buffer overflow attacks, format string vulnerabilities, or integer overflows. In this case, the function `atoi()` is used, which can lead to integer overflow if the input string represents a number larger than `INT_MAX`.\n\n## Mitigation Advice\n\nAvoid using C library functions that do not perform bounds checking or that may result in undefined or unexpected behavior. Instead, use safer alternatives provided by the C++ Standard Library. For instance, instead of `atoi()`, consider using `std::stoi()` which throws an exception if the conversion cannot be performed or if the converted value is out of range.\n\n## Source Code Fix Recommendation\n\nReplace the `atoi()` function with `std::stoi()`. Here is the fixed code:\n\n```cpp\ntry {\n    n = std::stoi(argv[++i]);\n} catch (std::invalid_argument& e) {\n    // handle error: the conversion could not be performed\n} catch (std::out_of_range& e) {\n    // handle error: the converted value would fall out of the range of the result type\n}\n```\n\n## Library Dependencies\n\nThe code example requires the following library:\n\n- `<cstdlib>` for `atoi()`\n- `<string>` for `std::stoi()`\n\n## References\n\n- [OWASP C++](https://owasp.org/www-pdf-archive/OWASP_SCP_v2.pdf)\n- [CWE-190: Integer Overflow or Wraparound](https://cwe.mitre.org/data/definitions/190.html)"
               },
               "properties": {
                 "tags": [
-                  "DS185832"
+                  "DS154189"
                 ]
               }
             },
             {
-              "id": "glog-108b5c16-3f09-4adc-b388-dc948aa0e224",
+              "id": "98a17e59-d2e5-3666-aac1-136ca1b4adb8",
               "help": {
                 "text": "",
-                "markdown": "## Description\n\nThe `memcpy` function in C++ is used to copy a block of memory from one location to another. This function is vulnerable to buffer overflow attacks if the size of the data being copied is larger than the size of the destination buffer. In the provided code snippet, `memcpy(ptr, rptr, sizeof(double))`, there is a potential vulnerability if the size of the data pointed to by `rptr` is larger than the size of the memory pointed to by `ptr`.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, you should always ensure that the destination buffer is large enough to hold the data being copied. This can be done by checking the size of the source data and the size of the destination buffer before calling `memcpy`.\n\n## Source Code Fix Recommendation\n\nHere is a recommended fix for the provided code snippet:\n\n```cpp\nsize_t size = sizeof(double);\nif (size <= sizeof(ptr)) {\n    memcpy(ptr, rptr, size);\n} else {\n    // Handle error\n}\n```\n\nIn this fix, we first check if the size of the destination buffer is large enough to hold the data being copied. If it is, we proceed with the `memcpy`. If it is not, we handle the error in a way that is appropriate for the specific application.\n\n## Library Dependencies\n\nThe `memcpy` function is part of the C standard library, so the only library dependency required by the code example is:\n\n```cpp\n#include <cstring>\n```\n\n## OWASP Resources\n\n- [Buffer Overflow](https://owasp.org/www-community/vulnerabilities/Buffer_Overflow)\n- [CWE-120: Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')](https://cwe.mitre.org/data/definitions/120.html)\n\nPlease note that the links provided are valid and active at the time of writing this report."
+                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability in C++ refers to the use of insecure C library functions that can lead to various security issues such as buffer overflows, format string vulnerabilities, integer overflows, etc. In this case, the `getenv` function is used, which can lead to security vulnerabilities if not properly handled. The `getenv` function returns a pointer to a string that is associated with the matched environment variable name. If the environment variable is controlled by an attacker, it can lead to serious security issues.\n\n## Mitigation Advice\n\nAvoid using insecure C library functions. If it's necessary to use them, ensure that proper error handling and input validation are implemented. In the case of `getenv`, consider the following:\n\n- Check if the returned pointer is NULL before using it.\n- Do not assume that the environment variable is always present.\n- Be aware that the returned string may be modified by subsequent calls to `getenv`, `setenv`, or `unsetenv`.\n- Be aware that environment variables can be controlled by attackers.\n\n## Source Code Fix Recommendation\n\n```cpp\nchar* gtest_listener = getenv(\"GTEST_LISTENER\");\nif(gtest_listener == NULL) {\n    // Handle the error, e.g., by using a default value\n    gtest_listener = \"default_value\";\n}\n```\n\n## Library Dependencies\n\n- Standard C Library (libc)\n\n## References\n\n- [OWASP C++](https://owasp.org/www-pdf-archive/OWASP_SCP_v2.pdf)\n- [CWE-676: Use of Potentially Dangerous Function](https://cwe.mitre.org/data/definitions/676.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS154189"
+                ]
+              }
+            },
+            {
+              "id": "e0a22700-8bbb-37db-9c49-b81b5bb2d894",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nIn C++ programming, the vulnerability \"Avoid Using Non-Cryptographic or Weak Random Number Generators\" refers to the use of weak or non-cryptographic random number generators that can lead to predictable or easily guessable values. This can be exploited by attackers to predict the outcome of the program, leading to security breaches.\n\nIn the given code snippet `ha[i] = CAST(rand() % 17)`, the `rand()` function is used which is a weak random number generator. It generates pseudo-random numbers that are not suitable for cryptographic operations.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, it is recommended to use strong cryptographic random number generators. In C++, you can use functions like `std::random_device`, `std::mt19937` (Mersenne Twister 19937 generator), or other similar functions provided by the `<random>` library.\n\n## Source Code Fix Recommendation\n\nHere is a fixed version of the code using `std::random_device`:\n\n```cpp\n#include <random>\n\nstd::random_device rd;\nstd::mt19937 gen(rd());\nstd::uniform_int_distribution<> dis(0, 16);\n\nha[i] = CAST(dis(gen));\n```\n\n## Library Dependencies\n\nThe fixed code requires the `<random>` library.\n\n## References\n\n- [CWE-338: Use of Cryptographically Weak PRNG](https://cwe.mitre.org/data/definitions/338.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS148264",
+                  "e0a22700-8bbb-37db-9c49-b81b5bb2d894"
+                ]
+              }
+            },
+            {
+              "id": "6bb7a31e-23f4-3d7c-b79a-8a5113009406",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nIn C++ programming, the vulnerability \"Avoid Using Non-Cryptographic or Weak Random Number Generators\" refers to the use of weak or non-cryptographic random number generators that can lead to predictable or easily guessable values. This can be exploited by attackers to predict the outcome of the program, leading to security breaches.\n\nIn the given code snippet `ha[i] = CAST(rand() % 17)`, the `rand()` function is used which is a weak random number generator. It generates pseudo-random numbers that are not suitable for cryptographic operations.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, it is recommended to use strong cryptographic random number generators. In C++, you can use functions like `std::random_device`, `std::mt19937` (Mersenne Twister 19937 generator), or other similar functions provided by the `<random>` library.\n\n## Source Code Fix Recommendation\n\nHere is a fixed version of the code using `std::random_device`:\n\n```cpp\n#include <random>\n\nstd::random_device rd;\nstd::mt19937 gen(rd());\nstd::uniform_int_distribution<> dis(0, 16);\n\nha[i] = CAST(dis(gen));\n```\n\n## Library Dependencies\n\nThe fixed code requires the `<random>` library.\n\n## References\n\n- [CWE-338: Use of Cryptographically Weak PRNG](https://cwe.mitre.org/data/definitions/338.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS148264",
+                  "6bb7a31e-23f4-3d7c-b79a-8a5113009406"
+                ]
+              }
+            },
+            {
+              "id": "88075590-fcff-3e24-9a57-d67a966d98d5",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nIn C++ programming, using system time or a static value for seeding randomness can lead to predictable results, which is a security vulnerability. This is because the seed value determines the sequence of random numbers that will be generated. If an attacker can predict or know the seed value, they can predict the sequence of random numbers, which can lead to various security issues, such as predictable session identifiers, predictable cryptographic keys, etc.\n\nIn the provided code example, `srand(1)` is used to seed the random number generator with a static value of 1. This means that every time the program is run, the same sequence of random numbers will be generated, which is predictable and hence insecure.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, use a truly random value to seed the random number generator. This can be achieved by using a high-quality source of randomness provided by the operating system, such as `/dev/urandom` on Unix-like systems or `CryptGenRandom` on Windows.\n\n## Source Code Fix Recommendation\n\nHere is a recommended fix for the provided code example:\n\n```cpp\n#include <random>\n\nstd::random_device rd;\nstd::mt19937 gen(rd());\n```\n\nIn this code, `std::random_device` is used to generate a non-deterministic random number, which is then used to seed the Mersenne Twister random number generator (`std::mt19937`).\n\n## Library Dependencies\n\nThe code example requires the `<random>` library.\n\n## References\n\n- [CWE-330: Use of Insufficiently Random Values](https://cwe.mitre.org/data/definitions/330.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS149435"
+                ]
+              }
+            },
+            {
+              "id": "efe1e55e-600a-3d58-96ab-d5af96efa6a1",
+              "help": {
+                "text": "",
+                "markdown": "This finding is considered a genuine vulnerability because the code performs a memory copy operation where the source and destination regions may overlap. The analysis detected that the destination and source expressions are related by data flow, which means they could refer to overlapping memory areas. Using memcpy in such cases leads to undefined behavior according to the C standard. Additionally, there is no evidence of a guard or check to prevent overlap, and the source pointer may also be null, which could cause a crash. These factors indicate a real risk of undefined behavior and potential security or stability issues.\n\n## In Context Remediation\nTo prevent undefined behavior when the source and destination memory regions may overlap, replace the use of `memcpy` with `memmove`, which is designed to handle overlapping regions safely. For example, change the code to:\n\n```cpp\nmemmove(B + offset_b, A + offset_a, M * sizeof(T));\n```\n\nThis ensures that the copy operation is performed correctly even if the source and destination overlap, eliminating the risk of undefined behavior.\n\n## References\n- [OWASP C-Based Toolchain Hardening Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [CWE-119: Improper Restriction of Operations within the Bounds of a Memory Buffer](https://cwe.mitre.org/data/definitions/119.html)\n- [CWE-120: Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')](https://cwe.mitre.org/data/definitions/120.html)\n- [CWE-787: Out-of-bounds Write](https://cwe.mitre.org/data/definitions/787.html)\n- [OWASP Buffer Overflow](https://owasp.org/www-community/vulnerabilities/Buffer_Overflow)\n\n___\n"
               },
               "properties": {
                 "tags": [
                   "DS121708"
+                ]
+              }
+            },
+            {
+              "id": "cae7428d-826a-357a-9870-f949061d2101",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\n\"Prohibited C Function Found\" is a vulnerability that arises when a program uses a function that can potentially lead to a security risk. In this case, the function `atoi()` is used, which is a standard C library function that converts a string into an integer. The problem with `atoi()` is that it does not perform any error checking. If the input string cannot be converted into an integer, it returns zero, which can lead to unexpected behavior.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, it is recommended to use safer alternatives that perform error checking. In C++, the `std::stoi()` function can be used as it throws an exception if the conversion fails. This allows the program to handle the error in a controlled manner.\n\n## Source Code Fix Recommendation\n\nReplace the `atoi()` function with `std::stoi()`. Here is the fixed code:\n\n```cpp\ntry {\n    batch_count = std::stoi(argv[++i]);\n} catch (std::invalid_argument& e) {\n    // handle error\n} catch (std::out_of_range& e) {\n    // handle error\n}\n```\n\n## Library Dependencies\n\nThe code example requires the following library:\n\n- `<string>`: This library is required for the `std::stoi()` function.\n\n## OWASP Resources\n\n- [OWASP C++ Secure Coding Practices](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n\n## Common Weakness Enumeration (CWE)\n\n- [CWE-242: Use of Inherently Dangerous Function](https://cwe.mitre.org/data/definitions/242.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS154189"
+                ]
+              }
+            },
+            {
+              "id": "8c71b2e8-ffaf-3404-aa33-d7ae14776277",
+              "help": {
+                "text": "",
+                "markdown": "This finding is considered a genuine vulnerability because the analysis detected a possible risk of undefined behavior due to overlapping memory regions between the source and destination in a memory copy operation. The destination and source expressions are derived from dataflow analysis, indicating that they may refer to overlapping memory, which is not allowed for `std::memcpy` and can result in unpredictable program behavior. Additionally, there are no explicit guards or checks to prevent this overlap, and the source may be null, further increasing the risk. The classification and verdict both indicate a high-confidence issue that should be addressed to ensure program correctness and security.\n\n## In Context Remediation\nTo prevent undefined behavior when copying memory, ensure that the source and destination memory regions do not overlap. If there is any possibility of overlap, use `std::memmove` instead of `std::memcpy`, as `std::memmove` is designed to handle overlapping regions safely. For example, replace the original call with:\n\n```cpp\nstd::memmove(&m_data[offset], &value, sizeof(T));\n```\n\nAlternatively, if you can guarantee that the source and destination never overlap, document this assumption clearly in the code and add assertions to enforce it at runtime:\n\n```cpp\nassert(&m_data[offset] != &value &&\n       ((char*)&m_data[offset] + sizeof(T) <= (char*)&value ||\n        (char*)&value + sizeof(T) <= (char*)&m_data[offset]));\nstd::memcpy(&m_data[offset], &value, sizeof(T));\n```\n\n## References\n- [OWASP C-Based Toolchain Hardening Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [CWE-119: Improper Restriction of Operations within the Bounds of a Memory Buffer](https://cwe.mitre.org/data/definitions/119.html)\n- [CWE-120: Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')](https://cwe.mitre.org/data/definitions/120.html)\n- [CWE-787: Out-of-bounds Write](https://cwe.mitre.org/data/definitions/787.html)\n- [OWASP Buffer Overflow](https://owasp.org/www-community/vulnerabilities/Buffer_Overflow)\n\n___\n"
+              },
+              "properties": {
+                "tags": [
+                  "DS121708"
+                ]
+              }
+            },
+            {
+              "id": "6693842e-4a68-3791-bb87-8de1e83209be",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability refers to the use of insecure C library functions in C++ code. These functions are often prone to buffer overflow attacks, format string vulnerabilities, integer overflow, etc. In this case, the function `atoi()` is used, which can lead to integer overflow if the input string represents a number larger than `INT_MAX`.\n\n## Mitigation Advice\n\nAvoid using C library functions that do not perform bounds checking or input validation. Instead, use safer alternatives provided by the C++ Standard Library. For `atoi()`, a safer alternative is `std::stoi()`, which throws an exception if the input string cannot be converted to an integer or if the converted value is out of the range of representable values by an `int`.\n\n## Source Code Fix Recommendation\n\nReplace the `atoi()` function with `std::stoi()`. Here is the fixed code:\n\n```cpp\ntry {\n    m = std::stoi(argv[++i]);\n} catch (const std::invalid_argument& ia) {\n    std::cerr << \"Invalid argument: \" << ia.what() << '\\n';\n} catch (const std::out_of_range& oor) {\n    std::cerr << \"Out of range: \" << oor.what() << '\\n';\n}\n```\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- `<cstdlib>` for `atoi()`\n- `<string>` for `std::stoi()`\n- `<iostream>` for `std::cerr`\n\n## References\n\n- [CWE-681: Incorrect Conversion between Numeric Types](https://cwe.mitre.org/data/definitions/681.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS154189"
+                ]
+              }
+            },
+            {
+              "id": "56709451-6646-3575-a4f5-5a8f994c806b",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\n\"Prohibited C Function Identified\" is a vulnerability that arises when a C++ program uses a function that is considered unsafe or insecure. In this case, the function `getenv()` is used, which can lead to security issues. The `getenv()` function returns a pointer to a string that is associated with the matched environment variable name passed as input. This can lead to potential security risks such as buffer overflows, or information disclosure if the environment variable contains sensitive information.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, it is recommended to avoid using the `getenv()` function. Instead, use safer alternatives that are less prone to security risks. For instance, consider using a configuration file to store and retrieve application settings, rather than environment variables.\n\n## Source Code Fix Recommendation\n\nInstead of using `getenv()`, consider using a safer alternative. For example, you could use a configuration file to store and retrieve application settings. Here is an example of how you might do this using the Boost library's property tree:\n\n```cpp\n#include <boost/property_tree/ptree.hpp>\n#include <boost/property_tree/ini_parser.hpp>\n\nboost::property_tree::ptree pt;\nboost::property_tree::ini_parser::read_ini(\"config.ini\", pt);\nstd::string verbose = pt.get<std::string>(\"Verbose\");\n```\n\nIn this example, the `config.ini` file would contain a line like `Verbose = some_value`, and the `pt.get<std::string>(\"Verbose\")` line retrieves the value associated with \"Verbose\".\n\n## Library Dependencies\n\nThe code example requires the following libraries:\n\n- Boost Property Tree\n\n## References\n\n- [OWASP C++ Secure Coding Practices](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [CWE-676: Use of Potentially Dangerous Function](https://cwe.mitre.org/data/definitions/676.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS154189"
+                ]
+              }
+            },
+            {
+              "id": "9bb4ed5b-085d-3ec5-8a01-9fc64e7592a9",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability refers to the use of insecure C library functions in C++ code. These functions are often prone to buffer overflow attacks, format string vulnerabilities, or integer overflows. In this case, the function `atoi()` is used, which can lead to integer overflow if the input string represents a number larger than `INT_MAX`.\n\n## Mitigation Advice\n\nAvoid using C library functions that do not perform bounds checking or input validation. Instead, use safer alternatives provided by the C++ Standard Library. For instance, instead of `atoi()`, you can use `std::stoi()`, which throws an exception if the input string cannot be converted to an integer or if the converted value is out of the range of representable values by an `int`.\n\n## Source Code Fix Recommendation\n\nReplace the `atoi()` function with `std::stoi()`. Here is the fixed code:\n\n```cpp\n#include <string>\n\n// ...\n\ntry {\n    stride = std::stoi(argv[++i]);\n} catch (const std::invalid_argument& ia) {\n    // Handle the exception\n} catch (const std::out_of_range& oor) {\n    // Handle the exception\n}\n```\n\n## Library Dependencies\n\nThe code example requires the following library:\n\n- `<string>`: This is a standard C++ library for string manipulation.\n\n## References\n\n- [CWE-190: Integer Overflow or Wraparound](https://cwe.mitre.org/data/definitions/190.html)\n\nPlease note that the links provided are accessible to anonymous users at the time of writing this report."
+              },
+              "properties": {
+                "tags": [
+                  "DS154189"
+                ]
+              }
+            },
+            {
+              "id": "cd3d0861-59f0-3964-b54d-6d4e0c12ccf7",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability refers to the use of insecure or unsafe C library functions in C++ code. These functions are often prone to errors such as buffer overflows, integer overflows, or other types of memory corruption, which can lead to serious security vulnerabilities.\n\nIn the provided code snippet, the function `atoi()` is used, which is a prohibited C function. The `atoi()` function converts a string to an integer and it does not perform any error checking. If the input string is not a valid integer, it can lead to undefined behavior.\n\n## Mitigation Advice\n\nAvoid using prohibited C functions. Instead, use safer alternatives that perform error checking. In the case of `atoi()`, a safer alternative is `strtol()`, which allows for error checking.\n\n## Source Code Fix Recommendation\n\nReplace the `atoi()` function with `strtol()`. Here is how you can do it:\n\n```cpp\nchar *end;\nlong int ld = strtol(argv[++i], &end, 10);\nif (end == argv[i] || *end != '\\0' || errno == ERANGE) {\n    // handle the error\n}\n```\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- `stdlib.h` for `strtol()`\n- `errno.h` for `errno`\n\n## References\n\n- [OWASP C++ Secure Coding Practices](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [CWE-242: Use of Inherently Dangerous Function](https://cwe.mitre.org/data/definitions/242.html)\n\nPlease note that the links provided are active and accessible to anonymous users at the time of writing this report."
+              },
+              "properties": {
+                "tags": [
+                  "DS154189"
+                ]
+              }
+            },
+            {
+              "id": "cb119692-c9d3-31a1-a734-f9efd20656a6",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability refers to the use of insecure C library functions in C++ code. These functions are often prone to buffer overflow attacks, format string vulnerabilities, or integer overflows. In this case, the function `atoi()` is used, which can lead to integer overflow if the input string represents a number larger than `INT_MAX`.\n\n## Mitigation Advice\n\nAvoid using C library functions that do not perform bounds checking or that may result in undefined or unexpected behavior. Instead, use safer alternatives provided by the C++ Standard Library. For instance, instead of `atoi()`, consider using `std::stoi()` which throws an exception if the conversion cannot be performed or if the converted value is out of range.\n\n## Source Code Fix Recommendation\n\nReplace the `atoi()` function with `std::stoi()`. Here is the fixed code:\n\n```cpp\ntry {\n    n = std::stoi(argv[++i]);\n} catch (std::invalid_argument& e) {\n    // handle error: the conversion could not be performed\n} catch (std::out_of_range& e) {\n    // handle error: the converted value would fall out of the range of the result type\n}\n```\n\n## Library Dependencies\n\nThe code example requires the following library:\n\n- `<cstdlib>` for `atoi()`\n- `<string>` for `std::stoi()`\n\n## References\n\n- [OWASP C++](https://owasp.org/www-pdf-archive/OWASP_SCP_v2.pdf)\n- [CWE-190: Integer Overflow or Wraparound](https://cwe.mitre.org/data/definitions/190.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS154189"
+                ]
+              }
+            },
+            {
+              "id": "5d7edaa1-2226-3798-bf2c-e415bee7b8bb",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nIn C++ programming, the vulnerability \"Avoid Using Non-Cryptographic or Weak Random Number Generators\" refers to the use of functions like `rand()` to generate random numbers. These functions are not suitable for generating random numbers in a security context because they are predictable and can be easily reproduced. This can lead to various security issues, such as predictability in password generation, session identifiers, or cryptographic keys.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, it is recommended to use a strong cryptographic random number generator. In C++, you can use functions provided by libraries like `<random>` which are designed to produce high-quality random numbers suitable for cryptographic use.\n\n## Source Code Fix Recommendation\n\nReplace the `rand()` function with a strong cryptographic random number generator. Here is an example of how you can do this in C++:\n\n```cpp\n#include <random>\n\nstd::random_device rd;\nstd::mt19937 gen(rd());\nstd::uniform_int_distribution<> dis(-3, 3);\n\nhc[i] = CAST(dis(gen));\n```\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- `<random>`: This library is used to generate high-quality random numbers.\n\n## References\n\n- [CWE-338: Use of Cryptographically Weak PRNG](https://cwe.mitre.org/data/definitions/338.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS148264",
+                  "5d7edaa1-2226-3798-bf2c-e415bee7b8bb"
+                ]
+              }
+            },
+            {
+              "id": "b302da41-612b-30c1-a727-268233289223",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nIn C++ programming, the vulnerability \"Avoid Using Non-Cryptographic or Weak Random Number Generators\" refers to the use of functions like `rand()` to generate random numbers. These functions are not suitable for generating random numbers in a security context because they are predictable and can be easily reproduced. This can lead to various security issues, such as predictability in password generation, session identifiers, or cryptographic keys.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, it is recommended to use a strong cryptographic random number generator. In C++, you can use functions provided by libraries like `<random>` which are designed to produce high-quality random numbers suitable for cryptographic use.\n\n## Source Code Fix Recommendation\n\nReplace the `rand()` function with a strong cryptographic random number generator. Here is an example of how you can do this in C++:\n\n```cpp\n#include <random>\n\nstd::random_device rd;\nstd::mt19937 gen(rd());\nstd::uniform_int_distribution<> dis(-3, 3);\n\nhb[i] = CAST(dis(gen));\n```\n\n## Library Dependencies\n\nThe code example requires the `<random>` library.\n\n## References\n\n- [CWE-338: Use of Cryptographically Weak Pseudo-Random Number Generator (PRNG)](https://cwe.mitre.org/data/definitions/338.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS148264",
+                  "b302da41-612b-30c1-a727-268233289223"
+                ]
+              }
+            },
+            {
+              "id": "2e152df1-1545-3c28-a327-85028050c462",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability refers to the use of insecure C library functions in C++ code. These functions are often prone to buffer overflow attacks, format string vulnerabilities, or other types of security issues. In this case, the `getenv` function is used, which can lead to security vulnerabilities if not properly handled. The `getenv` function returns a pointer to a string that is associated with the matched environment variable name. If the environment variable is controlled by an attacker, it can lead to serious security issues.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, it is recommended to avoid using the `getenv` function. If it's necessary to use it, ensure that the returned value is not directly used without proper validation and sanitization. Also, consider using safer alternatives that are less prone to security issues.\n\n## Source Code Fix Recommendation\n\nInstead of using `getenv`, consider using a safer alternative. For example, you can use the `std::getenv` function in C++ which is safer. Here is how you can modify the code:\n\n```cpp\n#include <cstdlib>\n\nconst char* env = std::getenv(\"ROCSPARSELT_SPMM_LIBPATH\");\nif (!env) {\n    // Handle the error\n}\n```\n\nIn this code, `std::getenv` is used instead of `getenv`. Also, it checks if the returned value is `NULL` and handles the error accordingly.\n\n## Library Dependencies\n\nThe code example requires the following library to execute properly:\n\n- cstdlib\n\n## OWASP and CWE Links\n\n- [CWE-676: Use of Potentially Dangerous Function](https://cwe.mitre.org/data/definitions/676.html)\n\nPlease note that these links are valid and active for anonymous users at the time of writing this report."
+              },
+              "properties": {
+                "tags": [
+                  "DS154189"
+                ]
+              }
+            },
+            {
+              "id": "0b94e0ed-efe0-3a6d-acb7-852aae04f801",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nIn C++ programming, the vulnerability \"Avoid Using Non-Cryptographic or Weak Random Number Generators\" refers to the use of functions like `rand()` to generate random numbers. These functions are not suitable for generating random numbers in a security context because they are predictable and can be easily reproduced. This can lead to various security issues, such as predictability in password generation, session identifiers, or cryptographic keys.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, it is recommended to use a strong cryptographic random number generator. In C++, you can use functions provided by libraries like `<random>` which are designed to produce high-quality random numbers suitable for cryptographic use.\n\n## Source Code Fix Recommendation\n\nReplace the `rand()` function with a strong cryptographic random number generator. Here is an example of how you can do this in C++:\n\n```cpp\n#include <random>\n\nstd::random_device rd;\nstd::mt19937 gen(rd());\nstd::uniform_int_distribution<> dis(-3, 3);\n\nhc[i] = CAST(dis(gen));\n```\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- `<random>`: This library is used to generate high-quality random numbers.\n\n## References\n\n- [CWE-338: Use of Cryptographically Weak PRNG](https://cwe.mitre.org/data/definitions/338.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS148264",
+                  "0b94e0ed-efe0-3a6d-acb7-852aae04f801"
+                ]
+              }
+            },
+            {
+              "id": "1e747d8a-a670-36da-85a6-72e6d7106e87",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nThe \"Detected Prohibited C Function\" vulnerability refers to the use of insecure C library functions in C++ code. These functions are often prone to buffer overflow attacks, format string vulnerabilities, and other security issues. In the provided code snippet, the `strerror` function is used, which is not thread-safe and can lead to race conditions if used in a multi-threaded environment.\n\n## Mitigation Advice\n\nAvoid using non-reentrant functions like `strerror`. Instead, use thread-safe alternatives such as `strerror_r` (POSIX) or `strerror_s` (Windows). Also, consider using exception handling for error reporting instead of relying on error codes and C library functions.\n\n## Source Code Fix\n\nHere is a possible fix for the code snippet:\n\n```cpp\n#include <cstring>\n#include <iostream>\n#include <string>\n\nchar buffer[256];\nif(strerror_r(errno, buffer, 256) == 0) {\n    hipsparselt_cerr << \"Cannot open \" << fileToOpen << \": \" << buffer << std::endl;\n} else {\n    hipsparselt_cerr << \"Cannot open \" << fileToOpen << \": Unknown error\" << std::endl;\n}\n```\n\n## Library Dependencies\n\nThe code snippet requires the following libraries:\n\n- `<cstring>` for `strerror_r` and `errno`\n- `<iostream>` for `std::endl`\n- `<string>` for string operations\n\n## References\n\n- [CWE-676: Use of Potentially Dangerous Function](https://cwe.mitre.org/data/definitions/676.html)\n\nPlease note that the links provided are accessible to anonymous users at the time of writing this report."
+              },
+              "properties": {
+                "tags": [
+                  "DS154189"
+                ]
+              }
+            },
+            {
+              "id": "84fd0ca6-f266-31dc-958b-ce72e13fc8e8",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nIn C++ programming, the vulnerability \"Avoid Using Non-Cryptographic or Weak Random Number Generators\" refers to the use of functions like `rand()` to generate random numbers. These functions are not suitable for generating random numbers in a security context because they are predictable and can be easily reproduced. This can lead to various security issues, such as predictability in password generation, session identifiers, or cryptographic keys.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, it is recommended to use a strong cryptographic random number generator. In C++, you can use functions provided by libraries like `<random>` which are designed to produce high-quality random numbers suitable for cryptographic use.\n\n## Source Code Fix Recommendation\n\nReplace the `rand()` function with a strong cryptographic random number generator. Here is an example of how you can do this in C++:\n\n```cpp\n#include <random>\n\nstd::random_device rd;\nstd::mt19937 gen(rd());\nstd::uniform_int_distribution<> dis(-3, 3);\n\nhb[i] = CAST(dis(gen));\n```\n\n## Library Dependencies\n\nThe code example requires the `<random>` library.\n\n## References\n\n- [CWE-338: Use of Cryptographically Weak Pseudo-Random Number Generator (PRNG)](https://cwe.mitre.org/data/definitions/338.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS148264",
+                  "84fd0ca6-f266-31dc-958b-ce72e13fc8e8"
+                ]
+              }
+            },
+            {
+              "id": "01b68733-f3ff-35ca-b2fd-f5f976b88616",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nIn C++ programming, the vulnerability \"Avoid Using Weak or Non-Cryptographic Random Number Generators\" refers to the use of weak random number generators or non-cryptographic random number generators in the code. These generators can produce predictable outcomes, which can be exploited by attackers to predict the next value that will be generated by the random number generator. This can lead to various security issues, such as password cracking, session hijacking, and other types of attacks.\n\nIn the given code snippet, `rand()` is a weak random number generator as it does not provide cryptographic security. The values it generates can be easily predicted, making it a security vulnerability.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, use a strong, cryptographic random number generator instead of `rand()`. In C++, you can use functions like `rand_s()` or libraries like `<random>` that provide stronger random number generators.\n\n## Source Code Fix Recommendation\n\nReplace the `rand()` function with a cryptographic random number generator. Here is an example using the `<random>` library in C++:\n\n```cpp\n#include <random>\n\nstd::random_device rd;\nstd::mt19937 gen(rd());\nstd::uniform_int_distribution<> distr(-3, 3);\n\nha[i] = CAST(distr(gen));\n```\n\n## Library Dependencies\n\nThe code example requires the `<random>` library for the random number generator.\n\n## References\n\n- [CWE-338: Use of Cryptographically Weak PRNG](https://cwe.mitre.org/data/definitions/338.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS148264",
+                  "01b68733-f3ff-35ca-b2fd-f5f976b88616"
+                ]
+              }
+            },
+            {
+              "id": "bb251356-b90a-3cb8-9b65-0aec349a6cd4",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nIn C++ programming, using system time or a static value for seeding randomness can lead to predictable results, which is a security vulnerability. This is because the seed value determines the sequence of random numbers that will be generated. If an attacker can predict or know the seed value, they can predict the sequence of random numbers, which can lead to various security issues, such as predictable session identifiers, predictable cryptographic keys, etc.\n\nIn the provided code example, `srand(1)` is used to seed the random number generator with a static value of 1. This means that every time the program is run, the same sequence of random numbers will be generated, which is predictable and hence insecure.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, use a truly random value to seed the random number generator. This can be achieved by using a high-quality source of randomness provided by the operating system, such as `/dev/urandom` on Unix-like systems or `CryptGenRandom` on Windows.\n\n## Source Code Fix Recommendation\n\nHere is a recommended fix for the provided code example:\n\n```cpp\n#include <random>\n\nstd::random_device rd;\nstd::mt19937 gen(rd());\n```\n\nIn this code, `std::random_device` is used to generate a non-deterministic random number, which is then used to seed the Mersenne Twister random number generator (`std::mt19937`).\n\n## Library Dependencies\n\nThe code example requires the `<random>` library.\n\n## References\n\n- [CWE-330: Use of Insufficiently Random Values](https://cwe.mitre.org/data/definitions/330.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS149435"
+                ]
+              }
+            },
+            {
+              "id": "0e1d9390-0851-30e0-9aab-0ba23209d33d",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nIn C++ programming, the vulnerability \"Avoid Using Weak or Non-Cryptographic Random Number Generators\" refers to the use of weak random number generators or non-cryptographic random number generators in the code. These generators can produce predictable outcomes, which can be exploited by attackers to predict the next value that will be generated by the random number generator. This can lead to various security issues, such as password cracking, session hijacking, and other types of attacks.\n\nIn the given code snippet, `rand()` is a weak random number generator as it does not provide cryptographic security. The values it generates can be easily predicted, making it a security vulnerability.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, use a strong, cryptographic random number generator instead of `rand()`. In C++, you can use functions like `rand_s()` or libraries like `<random>` that provide stronger random number generators.\n\n## Source Code Fix Recommendation\n\nReplace the `rand()` function with a cryptographic random number generator. Here is an example using the `<random>` library in C++:\n\n```cpp\n#include <random>\n\nstd::random_device rd;\nstd::mt19937 gen(rd());\nstd::uniform_int_distribution<> distr(-3, 3);\n\nha[i] = CAST(distr(gen));\n```\n\n## Library Dependencies\n\nThe code example requires the `<random>` library for the random number generator.\n\n## References\n\n- [CWE-338: Use of Cryptographically Weak PRNG](https://cwe.mitre.org/data/definitions/338.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS148264",
+                  "0e1d9390-0851-30e0-9aab-0ba23209d33d"
+                ]
+              }
+            },
+            {
+              "id": "a7f0ddb7-c478-3e4d-8fad-82f795cd3d89",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability refers to the use of insecure C library functions that can lead to various security issues such as buffer overflows, format string vulnerabilities, integer overflows, etc. In this case, the `atof()` function is used, which converts a string to a double. This function does not perform any error checking, and if the input string is not a valid representation of a double, it can lead to undefined behavior.\n\n## Mitigation Advice\n\nAvoid using C library functions that do not perform error checking or that can lead to buffer overflows. Instead, use safer alternatives that are available in the C++ Standard Library. For example, instead of using `atof()`, you can use `std::stod()` which throws an exception if the conversion cannot be performed.\n\n## Source Code Fix Recommendation\n\nReplace the `atof()` function with `std::stod()`. Here is the fixed code:\n\n```cpp\n#include <string>\n#include <cstdlib>\n\n// ...\n\ntry {\n    beta = std::stod(argv[++i]);\n} catch (const std::invalid_argument& ia) {\n    // Handle the exception\n}\n```\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- `<cstdlib>`: for `std::atof()`\n- `<string>`: for `std::stod()`\n\n## References\n\n- [OWASP C++ Secure Coding Practices](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [CWE-242: Use of Inherently Dangerous Function](https://cwe.mitre.org/data/definitions/242.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS154189"
+                ]
+              }
+            },
+            {
+              "id": "778a2dc6-36f3-36a4-aa73-4e5a4e4efb2c",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability refers to the use of insecure C library functions in C++ code. These functions are often prone to buffer overflow attacks, format string vulnerabilities, or integer overflows. In this case, the `atof` function is used, which converts a string to a double. This function does not check for overflow or underflow, and does not report any errors if the string does not represent a valid number.\n\n## Mitigation Advice\n\nAvoid using C library functions that do not perform bounds checking or error reporting. Instead, use safer alternatives provided by the C++ Standard Library. In this case, you can use `std::stod` function which throws an exception if the conversion cannot be performed.\n\n## Source Code Fix\n\nReplace the `atof` function with `std::stod`:\n\n```cpp\n#include <string>\n\ntry {\n    alpha = std::stod(argv[++i]);\n} catch (const std::invalid_argument& ia) {\n    // Handle the exception\n}\n```\n\n## Library Dependencies\n\nThe code example requires the following library:\n\n- `<string>`: This is a standard C++ library that provides support for strings.\n\n## References\n\n- [OWASP C++](https://owasp.org/www-pdf-archive/OWASP_SCP_v2.pdf)\n- [CWE-242: Use of Inherently Dangerous Function](https://cwe.mitre.org/data/definitions/242.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS154189"
+                ]
+              }
+            },
+            {
+              "id": "e5b9c353-8b48-3746-a05f-1be10209331d",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\n\"Prohibited C Function Found\" is a vulnerability that arises when a C++ program uses a function that is considered unsafe or insecure. In this case, the function `atoi()` is used, which is a standard library function that converts a string to an integer. The problem with `atoi()` is that it does not perform any error checking. If the input string cannot be converted to an integer, it returns zero, which can lead to unexpected behavior.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, it is recommended to use safer alternatives that perform error checking. In C++, the `std::stoi()` function can be used as a safer alternative to `atoi()`. This function throws an exception if the conversion fails, allowing the program to handle the error appropriately.\n\n## Source Code Fix Recommendation\n\nReplace the `atoi()` function with `std::stoi()`. Here is the fixed code:\n\n```cpp\n#include <string>\n\ntry {\n    stride_c = std::stoi(argv[++i]);\n} catch (std::invalid_argument& e) {\n    // handle error\n} catch (std::out_of_range& e) {\n    // handle error\n}\n```\n\n## Library Dependencies\n\nThe code example requires the following library:\n\n- `<string>`\n\n## OWASP Resources\n\n- [OWASP C++ Secure Coding Practices](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n\n## Common Weakness Enumeration (CWE)\n\n- [CWE-242: Use of Inherently Dangerous Function](https://cwe.mitre.org/data/definitions/242.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS154189"
+                ]
+              }
+            },
+            {
+              "id": "00f74cce-5fe0-336d-902a-7fc6b718077f",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability refers to the use of insecure C library functions in C++ code. These functions are often prone to buffer overflow attacks, format string vulnerabilities, integer overflow, etc. In this case, the function `atoi()` is used, which can lead to integer overflow if the input string represents a number larger than `INT_MAX`.\n\n## Mitigation Advice\n\nAvoid using insecure C library functions. Instead, use safer alternatives provided by the C++ Standard Library. For `atoi()`, a safer alternative is `std::stoi()`, which throws an exception if the conversion fails or if the converted value is out of range.\n\n## Source Code Fix Recommendation\n\nReplace `atoi()` with `std::stoi()`. Here is the fixed code:\n\n```cpp\n#include <string>\n\ntry {\n    stride_d = std::stoi(argv[++i]);\n} catch (std::invalid_argument& e) {\n    // Handle exception: input string does not represent a valid integer\n} catch (std::out_of_range& e) {\n    // Handle exception: converted value is out of range\n}\n```\n\n## Library Dependencies\n\nThe code example requires the following library:\n\n- `<string>`: for `std::stoi()`\n\n## References\n\n- [CWE-190: Integer Overflow or Wraparound](https://cwe.mitre.org/data/definitions/190.html)\n\nPlease note that the links provided are active and accessible to anonymous users at the time of writing this report."
+              },
+              "properties": {
+                "tags": [
+                  "DS154189"
+                ]
+              }
+            },
+            {
+              "id": "6f1b63ce-60d3-376a-85e7-424809fcc2c8",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability refers to the use of insecure C library functions in C++ code. These functions are often prone to buffer overflow attacks, format string vulnerabilities, or integer overflow attacks. In this case, the function `atoi()` is used, which can lead to integer overflow if the input string represents a number larger than `INT_MAX`.\n\n## Mitigation Advice\n\nAvoid using insecure C library functions. Instead, use safer alternatives provided by the C++ Standard Library. For `atoi()`, a safer alternative is `std::stoi()`, which throws an exception if the conversion fails or if the converted value is out of range.\n\n## Source Code Fix Recommendation\n\nReplace `atoi()` with `std::stoi()`. Here is the fixed code:\n\n```cpp\n#include <string>\n\ntry {\n    stride_a = std::stoi(argv[++i]);\n} catch (std::invalid_argument& e) {\n    // Handle exception: input string does not represent a valid integer\n} catch (std::out_of_range& e) {\n    // Handle exception: converted value is out of range\n}\n```\n\n## Library Dependencies\n\nThe code example requires the following library:\n\n- `<string>`: for `std::stoi()`\n\n## References\n\n- [CWE-190: Integer Overflow or Wraparound](https://cwe.mitre.org/data/definitions/190.html)\n\nPlease note that the links provided are accessible to anonymous users at the time of writing this report."
+              },
+              "properties": {
+                "tags": [
+                  "DS154189"
+                ]
+              }
+            },
+            {
+              "id": "1795a731-be94-3d68-8aa0-e08320f2d23b",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\n\"Prohibited C Function Found\" is a vulnerability that arises when a C++ program uses a function that is considered unsafe or insecure. In this case, the function `atoi()` is used, which is a standard library function that converts a string to an integer. The problem with `atoi()` is that it does not perform any error checking. If the input string cannot be converted to an integer, it returns zero, which can lead to unexpected behavior.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, it is recommended to use safer alternatives that perform error checking. In C++, the `std::stoi()` function can be used as a safer alternative to `atoi()`. This function throws an exception if the conversion fails, allowing the program to handle the error in a controlled manner.\n\n## Source Code Fix Recommendation\n\nReplace the `atoi()` function with `std::stoi()`. Here is the fixed code:\n\n```cpp\ntry {\n    ldd = std::stoi(argv[++i]);\n} catch (std::invalid_argument& e) {\n    // handle error\n} catch (std::out_of_range& e) {\n    // handle error\n}\n```\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- `<cstdlib>`: for `atoi()`\n- `<string>`: for `std::stoi()`\n\n## OWASP Resources\n\n- [OWASP C++ Secure Coding Practices](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n\n## Common Weakness Enumeration (CWE)\n\n- [CWE-242: Use of Inherently Dangerous Function](https://cwe.mitre.org/data/definitions/242.html)\n\nPlease note that the links provided are valid and active for anonymous users at the time of writing this report."
+              },
+              "properties": {
+                "tags": [
+                  "DS154189"
                 ]
               }
             }
@@ -143,30 +525,30 @@
       "language": "en-US",
       "results": [
         {
-          "ruleId": "glog-dc995160-db9f-4ef2-9c18-33a769a9ac2c",
+          "ruleId": "db6f18f0-1f8e-3729-b501-7c0ac7f84e58",
           "kind": "fail",
-          "level": "error",
+          "level": "warning",
           "message": {
-            "text": "\"Avoid Using Weak or Non-Cryptographic Random Number Generators\""
+            "text": "Detected Prohibited C Function"
           },
           "locations": [
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "clients/samples/example_spmm_strided_batched.cpp"
+                  "uri": "library/src/nvcc_detail/hipsparselt.cpp"
                 },
                 "region": {
-                  "startLine": 566,
-                  "startColumn": 22,
-                  "endLine": 566,
-                  "endColumn": 27,
-                  "charOffset": 20488,
-                  "charLength": 5,
+                  "startLine": 518,
+                  "startColumn": 18,
+                  "endLine": 518,
+                  "endColumn": 24,
+                  "charOffset": 15822,
+                  "charLength": 6,
                   "snippet": {
-                    "text": "rand(",
+                    "text": "getenv",
                     "rendered": {
-                      "text": "rand(",
-                      "markdown": "`rand(`"
+                      "text": "getenv",
+                      "markdown": "`getenv`"
                     }
                   },
                   "sourceLanguage": "cpp"
@@ -175,19 +557,694 @@
             }
           ],
           "properties": {
-            "DevSkimSeverity": "Important",
+            "DevSkimSeverity": "Moderate",
             "DevSkimConfidence": "High",
             "tags": [
-              "Cryptography.PRNG.Weak"
+              "API.DangerousAPI.BannedFunction"
             ]
           }
         },
         {
-          "ruleId": "glog-9c76e206-27e6-41cb-a0c0-17712cb0d326",
+          "ruleId": "b0514e80-36ee-3bfe-b672-c78877f9c819",
           "kind": "fail",
           "level": "note",
           "message": {
-            "text": "Detected Vulnerability in C Function (memcpy)"
+            "text": "Problematic C function detected (memcpy)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "library/src/nvcc_detail/hipsparselt.cpp"
+                },
+                "region": {
+                  "startLine": 951,
+                  "startColumn": 4,
+                  "endLine": 951,
+                  "endColumn": 28,
+                  "charOffset": 39690,
+                  "charLength": 24,
+                  "snippet": {
+                    "text": "memcpy(rev, v, sizeof(v)",
+                    "rendered": {
+                      "text": "memcpy(rev, v, sizeof(v)",
+                      "markdown": "`memcpy(rev, v, sizeof(v)`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "fixes": [
+            {
+              "description": {
+                "text": "There are a number of conditions in which memcpy can introduce a vulnerability (mismatched buffer sizes, null pointers, etc.). More secure alternitives perform additional validation of the source and destination buffer"
+              },
+              "artifactChanges": [
+                {
+                  "artifactLocation": {
+                    "uri": "library/src/nvcc_detail/hipsparselt.cpp"
+                  },
+                  "replacements": [
+                    {
+                      "deletedRegion": {
+                        "charOffset": 39690,
+                        "charLength": 24
+                      },
+                      "insertedContent": {
+                        "text": "memcpy_s(rev, <size of rev>,  v,  sizeof(v)"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "BestPractice",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.ProblematicFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "f8d661df-5cae-3bbb-a30c-d51d50a9b362",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Detected Prohibited C Function"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "library/src/nvcc_detail/hipsparselt.cpp"
+                },
+                "region": {
+                  "startLine": 522,
+                  "startColumn": 18,
+                  "endLine": 522,
+                  "endColumn": 24,
+                  "charOffset": 15946,
+                  "charLength": 6,
+                  "snippet": {
+                    "text": "getenv",
+                    "rendered": {
+                      "text": "getenv",
+                      "markdown": "`getenv`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Moderate",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "0ceb119d-3ff3-3816-aa39-9e87965bd47d",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Detected Prohibited C Function"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "library/src/nvcc_detail/hipsparselt.cpp"
+                },
+                "region": {
+                  "startLine": 529,
+                  "startColumn": 18,
+                  "endLine": 529,
+                  "endColumn": 24,
+                  "charOffset": 16187,
+                  "charLength": 6,
+                  "snippet": {
+                    "text": "getenv",
+                    "rendered": {
+                      "text": "getenv",
+                      "markdown": "`getenv`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Moderate",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "0ec7a2b5-d923-3c0d-a2ad-f8b4a86e9344",
+          "kind": "fail",
+          "level": "error",
+          "message": {
+            "text": "Avoid using system time or static value for randomness seeding."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "clients/samples/example_compress.cpp"
+                },
+                "region": {
+                  "startLine": 652,
+                  "startColumn": 4,
+                  "endLine": 652,
+                  "endColumn": 12,
+                  "charOffset": 23393,
+                  "charLength": 8,
+                  "snippet": {
+                    "text": "srand(1)",
+                    "rendered": {
+                      "text": "srand(1)",
+                      "markdown": "`srand(1)`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Critical",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "Cryptography.WeakRandomness"
+            ]
+          }
+        },
+        {
+          "ruleId": "345e9db6-bb27-3992-929a-4904344aa34f",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Detected Prohibited C Function"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "library/src/hcc_detail/rocsparselt/src/include/logging.h"
+                },
+                "region": {
+                  "startLine": 71,
+                  "startColumn": 45,
+                  "endLine": 71,
+                  "endColumn": 51,
+                  "charOffset": 2771,
+                  "charLength": 6,
+                  "snippet": {
+                    "text": "getenv",
+                    "rendered": {
+                      "text": "getenv",
+                      "markdown": "`getenv`"
+                    }
+                  },
+                  "sourceLanguage": "c"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Moderate",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "79d6c7c8-cf37-3c98-b92f-8b4f1cacdc97",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Detected Prohibited C Function"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "clients/samples/example_compress.cpp"
+                },
+                "region": {
+                  "startLine": 545,
+                  "startColumn": 29,
+                  "endLine": 545,
+                  "endColumn": 33,
+                  "charOffset": 19843,
+                  "charLength": 4,
+                  "snippet": {
+                    "text": "atoi",
+                    "rendered": {
+                      "text": "atoi",
+                      "markdown": "`atoi`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Moderate",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "22a778c5-6b4e-36d8-8476-357bb1123092",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Detected Prohibited C Function"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "clients/samples/example_compress.cpp"
+                },
+                "region": {
+                  "startLine": 529,
+                  "startColumn": 24,
+                  "endLine": 529,
+                  "endColumn": 28,
+                  "charOffset": 19272,
+                  "charLength": 4,
+                  "snippet": {
+                    "text": "atoi",
+                    "rendered": {
+                      "text": "atoi",
+                      "markdown": "`atoi`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Moderate",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "5dfa455e-18c2-3e78-94d7-1d73f7a03a8d",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "\"Prohibited C Function Found\""
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "clients/samples/example_compress.cpp"
+                },
+                "region": {
+                  "startLine": 537,
+                  "startColumn": 34,
+                  "endLine": 537,
+                  "endColumn": 38,
+                  "charOffset": 19561,
+                  "charLength": 4,
+                  "snippet": {
+                    "text": "atoi",
+                    "rendered": {
+                      "text": "atoi",
+                      "markdown": "`atoi`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Moderate",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "023d7871-4b68-3f09-8cc6-e00d0225b47c",
+          "kind": "fail",
+          "level": "note",
+          "message": {
+            "text": "Problematic C function detected (memcpy)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "library/src/hcc_detail/hipsparselt.cpp"
+                },
+                "region": {
+                  "startLine": 939,
+                  "startColumn": 4,
+                  "endLine": 939,
+                  "endColumn": 28,
+                  "charOffset": 38957,
+                  "charLength": 24,
+                  "snippet": {
+                    "text": "memcpy(rev, v, sizeof(v)",
+                    "rendered": {
+                      "text": "memcpy(rev, v, sizeof(v)",
+                      "markdown": "`memcpy(rev, v, sizeof(v)`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "fixes": [
+            {
+              "description": {
+                "text": "There are a number of conditions in which memcpy can introduce a vulnerability (mismatched buffer sizes, null pointers, etc.). More secure alternitives perform additional validation of the source and destination buffer"
+              },
+              "artifactChanges": [
+                {
+                  "artifactLocation": {
+                    "uri": "library/src/hcc_detail/hipsparselt.cpp"
+                  },
+                  "replacements": [
+                    {
+                      "deletedRegion": {
+                        "charOffset": 38957,
+                        "charLength": 24
+                      },
+                      "insertedContent": {
+                        "text": "memcpy_s(rev, <size of rev>,  v,  sizeof(v)"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "BestPractice",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.ProblematicFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "74692596-0bc9-39c5-b853-e980464a9459",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Detected Prohibited C Function"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "clients/samples/example_compress.cpp"
+                },
+                "region": {
+                  "startLine": 541,
+                  "startColumn": 25,
+                  "endLine": 541,
+                  "endColumn": 29,
+                  "charOffset": 19698,
+                  "charLength": 4,
+                  "snippet": {
+                    "text": "atoi",
+                    "rendered": {
+                      "text": "atoi",
+                      "markdown": "`atoi`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Moderate",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "a725add5-4894-3b96-b155-ea303315eabc",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Detected Prohibited C Function"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "clients/samples/example_compress.cpp"
+                },
+                "region": {
+                  "startLine": 533,
+                  "startColumn": 24,
+                  "endLine": 533,
+                  "endColumn": 28,
+                  "charOffset": 19406,
+                  "charLength": 4,
+                  "snippet": {
+                    "text": "atoi",
+                    "rendered": {
+                      "text": "atoi",
+                      "markdown": "`atoi`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Moderate",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "98a17e59-d2e5-3666-aac1-136ca1b4adb8",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Detected Prohibited C Function"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "clients/gtest/hipsparselt_gtest_main.cpp"
+                },
+                "region": {
+                  "startLine": 163,
+                  "startColumn": 27,
+                  "endLine": 163,
+                  "endColumn": 33,
+                  "charOffset": 5762,
+                  "charLength": 6,
+                  "snippet": {
+                    "text": "getenv",
+                    "rendered": {
+                      "text": "getenv",
+                      "markdown": "`getenv`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Moderate",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "88075590-fcff-3e24-9a57-d67a966d98d5",
+          "kind": "fail",
+          "level": "error",
+          "message": {
+            "text": "Avoid using system time or static value for randomness seeding."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "clients/samples/example_prune_strip.cpp"
+                },
+                "region": {
+                  "startLine": 438,
+                  "startColumn": 4,
+                  "endLine": 438,
+                  "endColumn": 12,
+                  "charOffset": 15437,
+                  "charLength": 8,
+                  "snippet": {
+                    "text": "srand(1)",
+                    "rendered": {
+                      "text": "srand(1)",
+                      "markdown": "`srand(1)`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Critical",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "Cryptography.WeakRandomness"
+            ]
+          }
+        },
+        {
+          "ruleId": "efe1e55e-600a-3d58-96ab-d5af96efa6a1",
+          "kind": "fail",
+          "level": "note",
+          "message": {
+            "text": "Problematic C function detected (memcpy)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "clients/include/hipsparselt_init.hpp"
+                },
+                "region": {
+                  "startLine": 360,
+                  "startColumn": 12,
+                  "endLine": 360,
+                  "endColumn": 60,
+                  "charOffset": 13060,
+                  "charLength": 48,
+                  "snippet": {
+                    "text": "memcpy(B + offset_b, A + offset_a, M * sizeof(T)",
+                    "rendered": {
+                      "text": "memcpy(B + offset_b, A + offset_a, M * sizeof(T)",
+                      "markdown": "`memcpy(B + offset_b, A + offset_a, M * sizeof(T)`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "fixes": [
+            {
+              "description": {
+                "text": "There are a number of conditions in which memcpy can introduce a vulnerability (mismatched buffer sizes, null pointers, etc.). More secure alternitives perform additional validation of the source and destination buffer"
+              },
+              "artifactChanges": [
+                {
+                  "artifactLocation": {
+                    "uri": "clients/include/hipsparselt_init.hpp"
+                  },
+                  "replacements": [
+                    {
+                      "deletedRegion": {
+                        "charOffset": 13060,
+                        "charLength": 48
+                      },
+                      "insertedContent": {
+                        "text": "memcpy_s(B + offset_b, <size of B + offset_b>,  A + offset_a,  M * sizeof(T)"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "BestPractice",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.ProblematicFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "cae7428d-826a-357a-9870-f949061d2101",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "\"Prohibited C Function Found\""
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "clients/samples/example_prune_strip.cpp"
+                },
+                "region": {
+                  "startLine": 324,
+                  "startColumn": 34,
+                  "endLine": 324,
+                  "endColumn": 38,
+                  "charOffset": 11606,
+                  "charLength": 4,
+                  "snippet": {
+                    "text": "atoi",
+                    "rendered": {
+                      "text": "atoi",
+                      "markdown": "`atoi`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Moderate",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "8c71b2e8-ffaf-3404-aa33-d7ae14776277",
+          "kind": "fail",
+          "level": "note",
+          "message": {
+            "text": "Problematic C function detected (memcpy)"
           },
           "locations": [
             {
@@ -248,30 +1305,270 @@
           }
         },
         {
-          "ruleId": "glog-77f6d799-7dc6-44a7-9bef-b24c56ff4d6b",
+          "ruleId": "6693842e-4a68-3791-bb87-8de1e83209be",
           "kind": "fail",
-          "level": "error",
+          "level": "warning",
           "message": {
-            "text": "\"Avoid Using Weak or Non-Cryptographic Random Number Generators\""
+            "text": "Detected Prohibited C Function"
           },
           "locations": [
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "clients/samples/example_spmm_strided_batched.cpp"
+                  "uri": "clients/samples/example_prune_strip.cpp"
                 },
                 "region": {
-                  "startLine": 566,
-                  "startColumn": 22,
-                  "endLine": 566,
-                  "endColumn": 30,
-                  "charOffset": 20488,
+                  "startLine": 316,
+                  "startColumn": 24,
+                  "endLine": 316,
+                  "endColumn": 28,
+                  "charOffset": 11317,
+                  "charLength": 4,
+                  "snippet": {
+                    "text": "atoi",
+                    "rendered": {
+                      "text": "atoi",
+                      "markdown": "`atoi`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Moderate",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "56709451-6646-3575-a4f5-5a8f994c806b",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "\"Prohibited C Function Identified\""
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "library/src/hcc_detail/rocsparselt/src/spmm/hip/kernel_launcher.cpp"
+                },
+                "region": {
+                  "startLine": 608,
+                  "startColumn": 42,
+                  "endLine": 608,
+                  "endColumn": 48,
+                  "charOffset": 22518,
+                  "charLength": 6,
+                  "snippet": {
+                    "text": "getenv",
+                    "rendered": {
+                      "text": "getenv",
+                      "markdown": "`getenv`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Moderate",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "9bb4ed5b-085d-3ec5-8a01-9fc64e7592a9",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Detected Prohibited C Function"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "clients/samples/example_prune_strip.cpp"
+                },
+                "region": {
+                  "startLine": 332,
+                  "startColumn": 29,
+                  "endLine": 332,
+                  "endColumn": 33,
+                  "charOffset": 11888,
+                  "charLength": 4,
+                  "snippet": {
+                    "text": "atoi",
+                    "rendered": {
+                      "text": "atoi",
+                      "markdown": "`atoi`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Moderate",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "cd3d0861-59f0-3964-b54d-6d4e0c12ccf7",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Detected Prohibited C Function"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "clients/samples/example_prune_strip.cpp"
+                },
+                "region": {
+                  "startLine": 328,
+                  "startColumn": 25,
+                  "endLine": 328,
+                  "endColumn": 29,
+                  "charOffset": 11743,
+                  "charLength": 4,
+                  "snippet": {
+                    "text": "atoi",
+                    "rendered": {
+                      "text": "atoi",
+                      "markdown": "`atoi`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Moderate",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "cb119692-c9d3-31a1-a734-f9efd20656a6",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Detected Prohibited C Function"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "clients/samples/example_prune_strip.cpp"
+                },
+                "region": {
+                  "startLine": 320,
+                  "startColumn": 24,
+                  "endLine": 320,
+                  "endColumn": 28,
+                  "charOffset": 11451,
+                  "charLength": 4,
+                  "snippet": {
+                    "text": "atoi",
+                    "rendered": {
+                      "text": "atoi",
+                      "markdown": "`atoi`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Moderate",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "2e152df1-1545-3c28-a327-85028050c462",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Detected Prohibited C Function"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "library/src/hcc_detail/rocsparselt/src/spmm/hip/kernel_launcher.cpp"
+                },
+                "region": {
+                  "startLine": 490,
+                  "startColumn": 30,
+                  "endLine": 490,
+                  "endColumn": 36,
+                  "charOffset": 18164,
+                  "charLength": 6,
+                  "snippet": {
+                    "text": "getenv",
+                    "rendered": {
+                      "text": "getenv",
+                      "markdown": "`getenv`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Moderate",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "1e747d8a-a670-36da-85a6-72e6d7106e87",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Detected Prohibited C Function"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "clients/include/hipsparselt_data.hpp"
+                },
+                "region": {
+                  "startLine": 131,
+                  "startColumn": 76,
+                  "endLine": 131,
+                  "endColumn": 84,
+                  "charOffset": 4509,
                   "charLength": 8,
                   "snippet": {
-                    "text": "rand() %",
+                    "text": "strerror",
                     "rendered": {
-                      "text": "rand() %",
-                      "markdown": "`rand() %`"
+                      "text": "strerror",
+                      "markdown": "`strerror`"
                     }
                   },
                   "sourceLanguage": "cpp"
@@ -280,95 +1577,15 @@
             }
           ],
           "properties": {
-            "DevSkimSeverity": "Important",
+            "DevSkimSeverity": "Moderate",
             "DevSkimConfidence": "High",
             "tags": [
-              "Cryptography.PRNG.Weak"
+              "API.DangerousAPI.BannedFunction"
             ]
           }
         },
         {
-          "ruleId": "glog-b4d90ae4-f58c-440f-99e6-bd9464ccfa20",
-          "kind": "fail",
-          "level": "error",
-          "message": {
-            "text": "\"Avoid Using Weak or Non-Cryptographic Random Number Generators\""
-          },
-          "locations": [
-            {
-              "physicalLocation": {
-                "artifactLocation": {
-                  "uri": "clients/samples/example_spmm_strided_batched.cpp"
-                },
-                "region": {
-                  "startLine": 562,
-                  "startColumn": 22,
-                  "endLine": 562,
-                  "endColumn": 30,
-                  "charOffset": 20400,
-                  "charLength": 8,
-                  "snippet": {
-                    "text": "rand() %",
-                    "rendered": {
-                      "text": "rand() %",
-                      "markdown": "`rand() %`"
-                    }
-                  },
-                  "sourceLanguage": "cpp"
-                }
-              }
-            }
-          ],
-          "properties": {
-            "DevSkimSeverity": "Important",
-            "DevSkimConfidence": "High",
-            "tags": [
-              "Cryptography.PRNG.Weak"
-            ]
-          }
-        },
-        {
-          "ruleId": "glog-62e951b1-3e3b-4a97-b258-86ff219e22e9",
-          "kind": "fail",
-          "level": "error",
-          "message": {
-            "text": "\"Avoid Using Weak or Non-Cryptographic Random Number Generators\""
-          },
-          "locations": [
-            {
-              "physicalLocation": {
-                "artifactLocation": {
-                  "uri": "clients/samples/example_spmm_strided_batched.cpp"
-                },
-                "region": {
-                  "startLine": 562,
-                  "startColumn": 22,
-                  "endLine": 562,
-                  "endColumn": 27,
-                  "charOffset": 20400,
-                  "charLength": 5,
-                  "snippet": {
-                    "text": "rand(",
-                    "rendered": {
-                      "text": "rand(",
-                      "markdown": "`rand(`"
-                    }
-                  },
-                  "sourceLanguage": "cpp"
-                }
-              }
-            }
-          ],
-          "properties": {
-            "DevSkimSeverity": "Important",
-            "DevSkimConfidence": "High",
-            "tags": [
-              "Cryptography.PRNG.Weak"
-            ]
-          }
-        },
-        {
-          "ruleId": "glog-67582a5f-3144-4607-9845-86d92efb0510",
+          "ruleId": "bb251356-b90a-3cb8-9b65-0aec349a6cd4",
           "kind": "fail",
           "level": "error",
           "message": {
@@ -408,76 +1625,11 @@
           }
         },
         {
-          "ruleId": "glog-b7947490-6bce-4fee-be3d-6ca5e320605d",
+          "ruleId": "a7f0ddb7-c478-3e4d-8fad-82f795cd3d89",
           "kind": "fail",
-          "level": "note",
+          "level": "warning",
           "message": {
-            "text": "Detected Vulnerability in C Function (memcpy)"
-          },
-          "locations": [
-            {
-              "physicalLocation": {
-                "artifactLocation": {
-                  "uri": "clients/common/hipsparselt_random.cpp"
-                },
-                "region": {
-                  "startLine": 85,
-                  "startColumn": 8,
-                  "endLine": 85,
-                  "endColumn": 39,
-                  "charOffset": 3360,
-                  "charLength": 31,
-                  "snippet": {
-                    "text": "memcpy(ptr, rptr, sizeof(float)",
-                    "rendered": {
-                      "text": "memcpy(ptr, rptr, sizeof(float)",
-                      "markdown": "`memcpy(ptr, rptr, sizeof(float)`"
-                    }
-                  },
-                  "sourceLanguage": "cpp"
-                }
-              }
-            }
-          ],
-          "fixes": [
-            {
-              "description": {
-                "text": "There are a number of conditions in which memcpy can introduce a vulnerability (mismatched buffer sizes, null pointers, etc.). More secure alternitives perform additional validation of the source and destination buffer"
-              },
-              "artifactChanges": [
-                {
-                  "artifactLocation": {
-                    "uri": "clients/common/hipsparselt_random.cpp"
-                  },
-                  "replacements": [
-                    {
-                      "deletedRegion": {
-                        "charOffset": 3360,
-                        "charLength": 31
-                      },
-                      "insertedContent": {
-                        "text": "memcpy_s(ptr, <size of ptr>,  rptr,  sizeof(float)"
-                      }
-                    }
-                  ]
-                }
-              ]
-            }
-          ],
-          "properties": {
-            "DevSkimSeverity": "BestPractice",
-            "DevSkimConfidence": "High",
-            "tags": [
-              "API.DangerousAPI.ProblematicFunction"
-            ]
-          }
-        },
-        {
-          "ruleId": "glog-dd84a6af-de10-4e93-96cd-fd66d3920798",
-          "kind": "fail",
-          "level": "error",
-          "message": {
-            "text": "\"Avoid Using Weak or Non-Cryptographic Random Number Generators\""
+            "text": "Detected Prohibited C Function"
           },
           "locations": [
             {
@@ -486,17 +1638,17 @@
                   "uri": "clients/samples/example_spmm_strided_batched.cpp"
                 },
                 "region": {
-                  "startLine": 558,
-                  "startColumn": 22,
-                  "endLine": 558,
-                  "endColumn": 30,
-                  "charOffset": 20312,
-                  "charLength": 8,
+                  "startLine": 405,
+                  "startColumn": 27,
+                  "endLine": 405,
+                  "endColumn": 31,
+                  "charOffset": 14934,
+                  "charLength": 4,
                   "snippet": {
-                    "text": "rand() %",
+                    "text": "atof",
                     "rendered": {
-                      "text": "rand() %",
-                      "markdown": "`rand() %`"
+                      "text": "atof",
+                      "markdown": "`atof`"
                     }
                   },
                   "sourceLanguage": "cpp"
@@ -505,95 +1657,7 @@
             }
           ],
           "properties": {
-            "DevSkimSeverity": "Important",
-            "DevSkimConfidence": "High",
-            "tags": [
-              "Cryptography.PRNG.Weak"
-            ]
-          }
-        },
-        {
-          "ruleId": "glog-b3c682ba-d4ea-4d8d-8cf6-43526c6d3cc9",
-          "kind": "fail",
-          "level": "error",
-          "message": {
-            "text": "\"Detected Use of Prohibited C Function (strcpy)\""
-          },
-          "locations": [
-            {
-              "physicalLocation": {
-                "artifactLocation": {
-                  "uri": "clients/common/hipsparselt_arguments.cpp"
-                },
-                "region": {
-                  "startLine": 40,
-                  "startColumn": 4,
-                  "endLine": 40,
-                  "endColumn": 37,
-                  "charOffset": 1567,
-                  "charLength": 33,
-                  "snippet": {
-                    "text": "strcpy(name, \"hipsparselt-bench\")",
-                    "rendered": {
-                      "text": "strcpy(name, \"hipsparselt-bench\")",
-                      "markdown": "`strcpy(name, \"hipsparselt-bench\")`"
-                    }
-                  },
-                  "sourceLanguage": "cpp"
-                }
-              }
-            }
-          ],
-          "fixes": [
-            {
-              "description": {
-                "text": "strcpy is frequently dangerous, as it will cause a buffer overflow if the source is larger than the destination."
-              },
-              "artifactChanges": [
-                {
-                  "artifactLocation": {
-                    "uri": "clients/common/hipsparselt_arguments.cpp"
-                  },
-                  "replacements": [
-                    {
-                      "deletedRegion": {
-                        "charOffset": 1567,
-                        "charLength": 33
-                      },
-                      "insertedContent": {
-                        "text": "strcpy_s(name, <size of name>,  \"hipsparselt-bench\")"
-                      }
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "description": {
-                "text": "strcpy is frequently dangerous, as it will cause a buffer overflow if the source is larger than the destination."
-              },
-              "artifactChanges": [
-                {
-                  "artifactLocation": {
-                    "uri": "clients/common/hipsparselt_arguments.cpp"
-                  },
-                  "replacements": [
-                    {
-                      "deletedRegion": {
-                        "charOffset": 1567,
-                        "charLength": 33
-                      },
-                      "insertedContent": {
-                        "text": "strlcpy(name,  \"hipsparselt-bench\", <size of name>)"
-                      }
-                    }
-                  ]
-                }
-              ]
-            }
-          ],
-          "properties": {
-            "DevSkimSeverity": "Important",
+            "DevSkimSeverity": "Moderate",
             "DevSkimConfidence": "High",
             "tags": [
               "API.DangerousAPI.BannedFunction"
@@ -601,30 +1665,30 @@
           }
         },
         {
-          "ruleId": "glog-108b5c16-3f09-4adc-b388-dc948aa0e224",
+          "ruleId": "778a2dc6-36f3-36a4-aa73-4e5a4e4efb2c",
           "kind": "fail",
-          "level": "note",
+          "level": "warning",
           "message": {
-            "text": "Detected Vulnerability in C Function (memcpy)"
+            "text": "Detected Prohibited C Function"
           },
           "locations": [
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "clients/common/hipsparselt_random.cpp"
+                  "uri": "clients/samples/example_spmm_strided_batched.cpp"
                 },
                 "region": {
-                  "startLine": 99,
-                  "startColumn": 8,
-                  "endLine": 99,
-                  "endColumn": 40,
-                  "charOffset": 3752,
-                  "charLength": 32,
+                  "startLine": 401,
+                  "startColumn": 28,
+                  "endLine": 401,
+                  "endColumn": 32,
+                  "charOffset": 14793,
+                  "charLength": 4,
                   "snippet": {
-                    "text": "memcpy(ptr, rptr, sizeof(double)",
+                    "text": "atof",
                     "rendered": {
-                      "text": "memcpy(ptr, rptr, sizeof(double)",
-                      "markdown": "`memcpy(ptr, rptr, sizeof(double)`"
+                      "text": "atof",
+                      "markdown": "`atof`"
                     }
                   },
                   "sourceLanguage": "cpp"
@@ -632,36 +1696,171 @@
               }
             }
           ],
-          "fixes": [
+          "properties": {
+            "DevSkimSeverity": "Moderate",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "e5b9c353-8b48-3746-a05f-1be10209331d",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "\"Prohibited C Function Found\""
+          },
+          "locations": [
             {
-              "description": {
-                "text": "There are a number of conditions in which memcpy can introduce a vulnerability (mismatched buffer sizes, null pointers, etc.). More secure alternitives perform additional validation of the source and destination buffer"
-              },
-              "artifactChanges": [
-                {
-                  "artifactLocation": {
-                    "uri": "clients/common/hipsparselt_random.cpp"
-                  },
-                  "replacements": [
-                    {
-                      "deletedRegion": {
-                        "charOffset": 3752,
-                        "charLength": 32
-                      },
-                      "insertedContent": {
-                        "text": "memcpy_s(ptr, <size of ptr>,  rptr,  sizeof(double)"
-                      }
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "clients/samples/example_spmm_strided_batched.cpp"
+                },
+                "region": {
+                  "startLine": 393,
+                  "startColumn": 31,
+                  "endLine": 393,
+                  "endColumn": 35,
+                  "charOffset": 14501,
+                  "charLength": 4,
+                  "snippet": {
+                    "text": "atoi",
+                    "rendered": {
+                      "text": "atoi",
+                      "markdown": "`atoi`"
                     }
-                  ]
+                  },
+                  "sourceLanguage": "cpp"
                 }
-              ]
+              }
             }
           ],
           "properties": {
-            "DevSkimSeverity": "BestPractice",
+            "DevSkimSeverity": "Moderate",
             "DevSkimConfidence": "High",
             "tags": [
-              "API.DangerousAPI.ProblematicFunction"
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "00f74cce-5fe0-336d-902a-7fc6b718077f",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Detected Prohibited C Function"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "clients/samples/example_spmm_strided_batched.cpp"
+                },
+                "region": {
+                  "startLine": 397,
+                  "startColumn": 31,
+                  "endLine": 397,
+                  "endColumn": 35,
+                  "charOffset": 14650,
+                  "charLength": 4,
+                  "snippet": {
+                    "text": "atoi",
+                    "rendered": {
+                      "text": "atoi",
+                      "markdown": "`atoi`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Moderate",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "6f1b63ce-60d3-376a-85e7-424809fcc2c8",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Detected Prohibited C Function"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "clients/samples/example_spmm_strided_batched.cpp"
+                },
+                "region": {
+                  "startLine": 385,
+                  "startColumn": 31,
+                  "endLine": 385,
+                  "endColumn": 35,
+                  "charOffset": 14203,
+                  "charLength": 4,
+                  "snippet": {
+                    "text": "atoi",
+                    "rendered": {
+                      "text": "atoi",
+                      "markdown": "`atoi`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Moderate",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "1795a731-be94-3d68-8aa0-e08320f2d23b",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "\"Prohibited C Function Found\""
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "clients/samples/example_spmm_strided_batched.cpp"
+                },
+                "region": {
+                  "startLine": 381,
+                  "startColumn": 26,
+                  "endLine": 381,
+                  "endColumn": 30,
+                  "charOffset": 14054,
+                  "charLength": 4,
+                  "snippet": {
+                    "text": "atoi",
+                    "rendered": {
+                      "text": "atoi",
+                      "markdown": "`atoi`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Moderate",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
             ]
           }
         }
